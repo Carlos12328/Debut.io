@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Debut.io — Dashboard</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/dashboard.html">Debut<span>.io</span></a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link active" href="/dashboard.html"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link" href="/events.html"><i class="bi bi-calendar-heart me-1"></i>Eventos</a></li>
+          <li class="nav-item"><a class="nav-link" href="/vendors.html"><i class="bi bi-shop me-1"></i>Fornecedores</a></li>
+          <li class="nav-item"><a class="nav-link" href="/payments.html"><i class="bi bi-cash-stack me-1"></i>Pagamentos</a></li>
+          <li class="nav-item"><a class="nav-link" href="/tasks.html"><i class="bi bi-check2-square me-1"></i>Tarefas</a></li>
+          <li class="nav-item"><a class="nav-link" href="/appointments.html"><i class="bi bi-calendar-check me-1"></i>Compromissos</a></li>
+          <li class="nav-item"><a class="nav-link" href="/share.html"><i class="bi bi-share me-1"></i>Compartilhar</a></li>
+        </ul>
+        <div class="d-flex align-items-center gap-2">
+          <span class="current-event-badge"><i class="bi bi-star-fill me-1"></i>Evento: <strong id="current-event-name">Nenhum</strong></span>
+          <button class="btn btn-sm btn-outline-light" onclick="logout()"><i class="bi bi-box-arrow-right me-1"></i>Sair</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div id="toast-container"></div>
+
+  <div class="container-fluid py-4 px-4">
+    <div class="page-header">
+      <h2><i class="bi bi-speedometer2 me-2"></i>Dashboard</h2>
+      <div class="d-flex align-items-center gap-2">
+        <label class="text-white mb-0 fw-semibold">Selecionar Evento:</label>
+        <select id="event-selector" class="form-select form-select-sm" style="min-width:200px;">
+          <option value="">-- Selecione um evento --</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="no-event-msg" class="alert alert-info d-none">
+      <i class="bi bi-info-circle me-2"></i>Nenhum evento selecionado. Crie um evento em <a href="/events.html">Eventos</a> e selecione-o acima.
+    </div>
+
+    <div id="dashboard-content" class="d-none">
+      <!-- Event overview -->
+      <div class="card mb-4">
+        <div class="card-header"><i class="bi bi-calendar-heart me-2"></i>Visão Geral do Evento</div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-3"><strong>Nome:</strong><br><span id="ov-name">—</span></div>
+            <div class="col-md-3"><strong>Data:</strong><br><span id="ov-date">—</span></div>
+            <div class="col-md-3"><strong>Local:</strong><br><span id="ov-location">—</span></div>
+            <div class="col-md-3"><strong>Status:</strong><br><span id="ov-status">—</span></div>
+            <div class="col-md-6"><strong>Orçamento Total:</strong><br><span id="ov-budget" class="fs-5 fw-bold text-primary">—</span></div>
+            <div class="col-md-6"><strong>Descrição:</strong><br><span id="ov-description">—</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Financial summary -->
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+          <div class="stat-card paid">
+            <div class="stat-label"><i class="bi bi-check-circle me-1"></i>Total Pago</div>
+            <div class="stat-value" id="fin-paid">R$ 0,00</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card pending">
+            <div class="stat-label"><i class="bi bi-clock me-1"></i>Total Pendente</div>
+            <div class="stat-value" id="fin-pending">R$ 0,00</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card overdue">
+            <div class="stat-label"><i class="bi bi-exclamation-triangle me-1"></i>Total Atrasado</div>
+            <div class="stat-value" id="fin-overdue">R$ 0,00</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card budget">
+            <div class="stat-label"><i class="bi bi-pie-chart me-1"></i>Orçamento Usado</div>
+            <div class="stat-value" id="fin-percent">0%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Budget progress bar -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <div class="d-flex justify-content-between mb-1">
+            <span class="fw-semibold">Progresso do Orçamento</span>
+            <span id="budget-progress-label">0%</span>
+          </div>
+          <div class="progress" style="height:18px; border-radius:10px;">
+            <div id="budget-progress-bar" class="progress-bar progress-bar-custom" style="width:0%; border-radius:10px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <!-- Recent tasks -->
+        <div class="col-md-6">
+          <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <span><i class="bi bi-check2-square me-2"></i>Tarefas Recentes</span>
+              <a href="/tasks.html" class="btn btn-sm btn-light">Ver todas</a>
+            </div>
+            <div class="card-body p-0">
+              <table class="table table-hover mb-0">
+                <thead><tr><th>Título</th><th>Status</th><th>Prazo</th></tr></thead>
+                <tbody id="recent-tasks"><tr><td colspan="3" class="text-center text-muted py-3">Nenhuma tarefa</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <!-- Upcoming appointments -->
+        <div class="col-md-6">
+          <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <span><i class="bi bi-calendar-check me-2"></i>Próximos Compromissos</span>
+              <a href="/appointments.html" class="btn btn-sm btn-light">Ver todos</a>
+            </div>
+            <div class="card-body p-0">
+              <table class="table table-hover mb-0">
+                <thead><tr><th>Título</th><th>Data</th><th>Hora</th></tr></thead>
+                <tbody id="upcoming-appointments"><tr><td colspan="3" class="text-center text-muted py-3">Nenhum compromisso</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick links -->
+      <div class="row g-3 mt-3">
+        <div class="col-6 col-md-3"><a href="/vendors.html" class="card text-center p-3 text-decoration-none"><i class="bi bi-shop fs-2 text-primary"></i><div class="mt-2 fw-semibold">Fornecedores</div></a></div>
+        <div class="col-6 col-md-3"><a href="/payments.html" class="card text-center p-3 text-decoration-none"><i class="bi bi-cash-stack fs-2 text-success"></i><div class="mt-2 fw-semibold">Pagamentos</div></a></div>
+        <div class="col-6 col-md-3"><a href="/tasks.html" class="card text-center p-3 text-decoration-none"><i class="bi bi-check2-square fs-2 text-warning"></i><div class="mt-2 fw-semibold">Tarefas</div></a></div>
+        <div class="col-6 col-md-3"><a href="/share.html" class="card text-center p-3 text-decoration-none"><i class="bi bi-share fs-2 text-info"></i><div class="mt-2 fw-semibold">Compartilhar</div></a></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

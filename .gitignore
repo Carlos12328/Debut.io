@@ -1,0 +1,7 @@
+backend/node_modules/
+backend/debut.db
+backend/debut.db-shm
+backend/debut.db-wal
+backend/.env
+backend/server.log
+server.pid

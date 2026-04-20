@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Debut.io — Compartilhar</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/dashboard.html">Debut<span>.io</span></a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link" href="/dashboard.html"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link" href="/events.html"><i class="bi bi-calendar-heart me-1"></i>Eventos</a></li>
+          <li class="nav-item"><a class="nav-link" href="/vendors.html"><i class="bi bi-shop me-1"></i>Fornecedores</a></li>
+          <li class="nav-item"><a class="nav-link" href="/payments.html"><i class="bi bi-cash-stack me-1"></i>Pagamentos</a></li>
+          <li class="nav-item"><a class="nav-link" href="/tasks.html"><i class="bi bi-check2-square me-1"></i>Tarefas</a></li>
+          <li class="nav-item"><a class="nav-link" href="/appointments.html"><i class="bi bi-calendar-check me-1"></i>Compromissos</a></li>
+          <li class="nav-item"><a class="nav-link active" href="/share.html"><i class="bi bi-share me-1"></i>Compartilhar</a></li>
+        </ul>
+        <div class="d-flex align-items-center gap-2">
+          <span class="current-event-badge"><i class="bi bi-star-fill me-1"></i>Evento: <strong id="current-event-name">Nenhum</strong></span>
+          <button class="btn btn-sm btn-outline-light" onclick="logout()"><i class="bi bi-box-arrow-right me-1"></i>Sair</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div id="toast-container"></div>
+
+  <div class="container-fluid py-4 px-4">
+    <div class="page-header">
+      <h2><i class="bi bi-share me-2"></i>Compartilhar Informações</h2>
+      <div class="d-flex gap-2">
+        <button class="btn btn-light fw-bold" onclick="copyToClipboard()">
+          <i class="bi bi-clipboard me-2"></i>Copiar para Área de Transferência
+        </button>
+        <button class="btn btn-outline-light fw-bold" onclick="window.print()">
+          <i class="bi bi-printer me-2"></i>Imprimir
+        </button>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header"><i class="bi bi-info-circle me-2"></i>Resumo do Evento</div>
+      <div class="card-body">
+        <div id="share-formatted" class="share-output">Carregando informações do evento...</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><i class="bi bi-code me-2"></i>Dados Completos (JSON)</div>
+      <div class="card-body">
+        <pre id="share-json" class="share-output" style="font-size:0.8rem;">Carregando...</pre>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/share.js"></script>
+</body>
+</html>
