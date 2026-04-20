@@ -26,7 +26,9 @@ async function loadEvents() {
       <td><span class="status-badge badge-${ev.status}">${ev.status}</span></td>
       <td>
         <div class="d-flex gap-1 flex-wrap">
-          <button class="btn btn-sm btn-outline-primary" title="Selecionar evento" onclick="selectEvent(${ev.id}, '${ev.name.replace(/'/g, "\\'")}')">
+              <button class="btn btn-sm btn-outline-primary" title="Selecionar evento"
+            data-event-id="${ev.id}" data-event-name="${ev.name.replace(/"/g, '&quot;')}"
+            onclick="selectEvent(this.dataset.eventId, this.dataset.eventName)">
             <i class="bi bi-star"></i>
           </button>
           <button class="btn btn-sm btn-outline-secondary" title="Editar" onclick="openEditModal(${ev.id})">
