@@ -27,7 +27,7 @@ async function loadEvents() {
       <td>
         <div class="d-flex gap-1 flex-wrap">
               <button class="btn btn-sm btn-outline-primary" title="Selecionar evento"
-            data-event-id="${ev.id}" data-event-name="${ev.name.replace(/"/g, '&quot;')}"
+            data-event-id="${parseInt(ev.id, 10)}" data-event-name="${ev.name.replace(/"/g, '&quot;')}"
             onclick="selectEvent(this.dataset.eventId, this.dataset.eventName)">
             <i class="bi bi-star"></i>
           </button>

@@ -100,12 +100,6 @@ async function copyToClipboard() {
     await navigator.clipboard.writeText(text);
     showToast('Copiado para a área de transferência!');
   } catch {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    showToast('Copiado!');
+    showToast('Não foi possível copiar automaticamente. Selecione o texto manualmente e pressione Ctrl+C.', 'warning');
   }
 }
