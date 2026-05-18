@@ -2,14 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { LoginScreen } from './modules/login/LoginScreen';
 import { CadastroScreen } from './modules/cadastro/CadastroScreen';
-import { Usuario } from '../domain/models';
+import { EventoScreen } from './modules/eventos/EventoScreen';
+import { MainScreen } from './modules/main/MainScreen';
+import { Usuario, Evento } from '../domain/models';
 import { getDatabase } from '../persistence/db';
 
-type Tela = 'login' | 'cadastro';
+type Tela = 'login' | 'cadastro' | 'eventos' | 'main';
 
 export default function AppRoot() {
   const [telaAtual, setTelaAtual] = useState<Tela>('login');
   const [usuarioLogado, setUsuarioLogado] = useState<Usuario | null>(null);
+  const [eventoSelecionado, setEventoSelecionado] = useState<Evento | null>(null);
   const [dbPronto, setDbPronto] = useState(false);
 
   useEffect(() => {
@@ -29,32 +32,44 @@ export default function AppRoot() {
     );
   }
 
-  if (usuarioLogado) {
+  if (!usuarioLogado) {
+    if (telaAtual === 'cadastro') {
+      return (
+        <CadastroScreen
+          onCadastroSuccess={() => setTelaAtual('login')}
+          onVoltarLogin={() => setTelaAtual('login')}
+        />
+      );
+    }
     return (
-      <View style={styles.container}>
-        <Text style={styles.text}>Bem-vindo, {usuarioLogado.nome}! 🎉</Text>
-      </View>
+      <LoginScreen
+        onLoginSuccess={(u) => { setUsuarioLogado(u); setTelaAtual('eventos'); }}
+        onIrParaCadastro={() => setTelaAtual('cadastro')}
+      />
     );
   }
 
-  if (telaAtual === 'cadastro') {
+  if (telaAtual === 'main' && eventoSelecionado) {
     return (
-      <CadastroScreen
-        onCadastroSuccess={() => setTelaAtual('login')}
-        onVoltarLogin={() => setTelaAtual('login')}
+      <MainScreen
+        usuario={usuarioLogado}
+        evento={eventoSelecionado}
+        onVoltarEventos={() => { setEventoSelecionado(null); setTelaAtual('eventos'); }}
       />
     );
   }
 
   return (
-    <LoginScreen
-      onLoginSuccess={setUsuarioLogado}
-      onIrParaCadastro={() => setTelaAtual('cadastro')}
+    <EventoScreen
+      usuario={usuarioLogado}
+      onSelecionarEvento={(evento) => {
+        setEventoSelecionado(evento);
+        setTelaAtual('main');
+      }}
     />
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  text: { fontSize: 20, color: '#9b59b6' },
 });

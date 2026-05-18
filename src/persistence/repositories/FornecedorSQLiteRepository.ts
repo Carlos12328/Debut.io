@@ -1,0 +1,50 @@
+import { Fornecedor, EntityId } from '../../domain/models';
+import { FornecedorRepository } from './index';
+import { getDatabase } from '../db';
+
+export class FornecedorSQLiteRepository implements FornecedorRepository {
+  async getByEvento(id_evento: EntityId): Promise<Fornecedor[]> {
+    const db = await getDatabase();
+    return db.getAllSync<Fornecedor>(
+      'SELECT * FROM fornecedor WHERE id_evento = ?',
+      [id_evento]
+    );
+  }
+
+  async getById(id: EntityId): Promise<Fornecedor | null> {
+    const db = await getDatabase();
+    const result = db.getFirstSync<Fornecedor>(
+      'SELECT * FROM fornecedor WHERE id_fornecedor = ?',
+      [id]
+    );
+    return result ?? null;
+  }
+
+  async list(): Promise<Fornecedor[]> {
+    const db = await getDatabase();
+    return db.getAllSync<Fornecedor>('SELECT * FROM fornecedor');
+  }
+
+  async create(data: Fornecedor): Promise<Fornecedor> {
+    const db = await getDatabase();
+    db.runSync(
+      'INSERT INTO fornecedor (id_evento, nome, tipo_servico, valor) VALUES (?, ?, ?, ?)',
+      [data.id_evento, data.nome, data.tipo_servico, data.valor]
+    );
+    const lista = await this.getByEvento(data.id_evento);
+    return lista[lista.length - 1];
+  }
+
+  async update(id: EntityId, data: Partial<Fornecedor>): Promise<Fornecedor> {
+    const db = await getDatabase();
+    const campos = Object.keys(data).map((k) => `${k} = ?`).join(', ');
+    const valores = [...Object.values(data), id];
+    db.runSync(`UPDATE fornecedor SET ${campos} WHERE id_fornecedor = ?`, valores);
+    return (await this.getById(id))!;
+  }
+
+  async remove(id: EntityId): Promise<void> {
+    const db = await getDatabase();
+    db.runSync('DELETE FROM fornecedor WHERE id_fornecedor = ?', [id]);
+  }
+}

@@ -1,5 +1,5 @@
-import { Usuario, PerfilUsuario } from '../models';
-import { UsuarioRepository } from '../../persistence/repositories';
+import { Usuario, PerfilUsuario, Evento, Fornecedor } from '../models';
+import { UsuarioRepository, EventoRepository, FornecedorRepository } from '../../persistence/repositories';
 
 // ─── Auth ────────────────────────────────────────────────
 export interface AuthService {
@@ -34,5 +34,59 @@ export class CadastroServiceImpl implements CadastroService {
     if (existente) throw new Error('Já existe uma conta com este e-mail.');
     const novoUsuario = { id_usuario: 0, nome, email, senha_hash: senha, perfil };
     return await this.usuarioRepository.create(novoUsuario);
+  }
+}
+
+// ─── Evento ──────────────────────────────────────────────
+export interface EventoService {
+  cadastrar(id_usuario: number, nome: string, data_evento: string, orcamento: number): Promise<Evento>;
+  listar(id_usuario: number): Promise<Evento[]>;
+  encerrar(id_evento: number): Promise<Evento>;
+}
+
+export class EventoServiceImpl implements EventoService {
+  constructor(private readonly eventoRepository: EventoRepository) {}
+
+  async cadastrar(id_usuario: number, nome: string, data_evento: string, orcamento: number): Promise<Evento> {
+    if (!nome) throw new Error('O nome do evento é obrigatório.');
+    if (!data_evento) throw new Error('A data do evento é obrigatória.');
+    if (orcamento <= 0) throw new Error('O orçamento deve ser maior que zero.');
+    const novoEvento: Evento = { id_evento: 0, id_usuario, nome, data_evento, orcamento, status: 'ativo' };
+    return await this.eventoRepository.create(novoEvento);
+  }
+
+  async listar(id_usuario: number): Promise<Evento[]> {
+    return await this.eventoRepository.getByUsuario(id_usuario);
+  }
+
+  async encerrar(id_evento: number): Promise<Evento> {
+    return await this.eventoRepository.update(id_evento, { status: 'encerrado' });
+  }
+}
+
+// ─── Fornecedor ──────────────────────────────────────────
+export interface FornecedorService {
+  cadastrar(id_evento: number, nome: string, tipo_servico: string, valor: number): Promise<Fornecedor>;
+  listar(id_evento: number): Promise<Fornecedor[]>;
+  remover(id_fornecedor: number): Promise<void>;
+}
+
+export class FornecedorServiceImpl implements FornecedorService {
+  constructor(private readonly fornecedorRepository: FornecedorRepository) {}
+
+  async cadastrar(id_evento: number, nome: string, tipo_servico: string, valor: number): Promise<Fornecedor> {
+    if (!nome) throw new Error('O nome do fornecedor é obrigatório.');
+    if (!tipo_servico) throw new Error('O tipo de serviço é obrigatório.');
+    if (valor <= 0) throw new Error('O valor deve ser maior que zero.');
+    const novo: Fornecedor = { id_fornecedor: 0, id_evento, nome, tipo_servico, valor };
+    return await this.fornecedorRepository.create(novo);
+  }
+
+  async listar(id_evento: number): Promise<Fornecedor[]> {
+    return await this.fornecedorRepository.getByEvento(id_evento);
+  }
+
+  async remover(id_fornecedor: number): Promise<void> {
+    return await this.fornecedorRepository.remove(id_fornecedor);
   }
 }

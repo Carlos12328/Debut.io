@@ -16,15 +16,18 @@ export interface Repository<T> {
   remove(id: EntityId): Promise<void>;
 }
 
-export interface UsuarioRepository extends Repository<Usuario> {}
-export interface EventoRepository extends Repository<Evento> {}
-export interface FornecedorRepository extends Repository<Fornecedor> {}
-export interface PagamentoRepository extends Repository<Pagamento> {}
-export interface TarefaRepository extends Repository<Tarefa> {}
-export interface CompromissoRepository extends Repository<Compromisso> {}
-
-
-// Adicione este método à interface UsuarioRepository existente:
 export interface UsuarioRepository extends Repository<Usuario> {
   getByEmail(email: string): Promise<Usuario | null>;
 }
+
+export interface EventoRepository extends Repository<Evento> {
+  getByUsuario(id_usuario: EntityId): Promise<Evento[]>;
+}
+
+export interface FornecedorRepository extends Repository<Fornecedor> {
+  getByEvento(id_evento: EntityId): Promise<Fornecedor[]>;
+}
+
+export interface PagamentoRepository extends Repository<Pagamento> {}
+export interface TarefaRepository extends Repository<Tarefa> {}
+export interface CompromissoRepository extends Repository<Compromisso> {}
