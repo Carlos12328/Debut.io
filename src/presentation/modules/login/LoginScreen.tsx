@@ -7,14 +7,15 @@ import { Usuario } from '../../../domain/models';
 
 interface Props {
   onLoginSuccess: (usuario: Usuario) => void;
+  onIrParaCadastro: () => void;
 }
 
-export function LoginScreen({ onLoginSuccess }: Props) {
+export function LoginScreen({ onLoginSuccess, onIrParaCadastro }: Props) {
   const presenter = useMemo(() => {
     const repo = new UsuarioSQLiteRepository();
     const service = new AuthServiceImpl(repo);
     return new LoginPresenter(service);
   }, []);
 
-  return <LoginView presenter={presenter} onLoginSuccess={onLoginSuccess} />;
+  return <LoginView presenter={presenter} onLoginSuccess={onLoginSuccess} onIrParaCadastro={onIrParaCadastro} />;
 }

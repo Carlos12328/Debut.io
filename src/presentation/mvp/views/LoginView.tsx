@@ -9,9 +9,10 @@ import { Usuario } from '../../../domain/models';
 interface Props {
   presenter: LoginPresenter;
   onLoginSuccess: (usuario: Usuario) => void;
+  onIrParaCadastro: () => void;
 }
 
-export function LoginView({ presenter, onLoginSuccess }: Props) {
+export function LoginView({ presenter, onLoginSuccess, onIrParaCadastro }: Props) {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
@@ -40,7 +41,6 @@ export function LoginView({ presenter, onLoginSuccess }: Props) {
         autoCapitalize="none"
         keyboardType="email-address"
       />
-
       <TextInput
         style={styles.input}
         placeholder="Senha"
@@ -59,6 +59,10 @@ export function LoginView({ presenter, onLoginSuccess }: Props) {
           : <Text style={styles.buttonText}>Entrar</Text>
         }
       </TouchableOpacity>
+
+      <TouchableOpacity onPress={onIrParaCadastro} style={styles.linkContainer}>
+        <Text style={styles.link}>Não tem conta? Cadastre-se</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -67,13 +71,9 @@ const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', padding: 24, backgroundColor: '#fff' },
   title: { fontSize: 32, fontWeight: 'bold', color: '#9b59b6', textAlign: 'center', marginBottom: 4 },
   subtitle: { fontSize: 16, color: '#888', textAlign: 'center', marginBottom: 32 },
-  input: {
-    borderWidth: 1, borderColor: '#ddd', borderRadius: 8,
-    padding: 12, marginBottom: 16, fontSize: 16,
-  },
-  button: {
-    backgroundColor: '#9b59b6', padding: 14,
-    borderRadius: 8, alignItems: 'center',
-  },
+  input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 16 },
+  button: { backgroundColor: '#9b59b6', padding: 14, borderRadius: 8, alignItems: 'center' },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  linkContainer: { alignItems: 'center', marginTop: 16 },
+  link: { color: '#9b59b6', fontSize: 14 },
 });

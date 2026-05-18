@@ -1,23 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { LoginScreen } from './modules/login/LoginScreen';
+import { CadastroScreen } from './modules/cadastro/CadastroScreen';
 import { Usuario } from '../domain/models';
 import { getDatabase } from '../persistence/db';
 
+type Tela = 'login' | 'cadastro';
+
 export default function AppRoot() {
+  const [telaAtual, setTelaAtual] = useState<Tela>('login');
   const [usuarioLogado, setUsuarioLogado] = useState<Usuario | null>(null);
   const [dbPronto, setDbPronto] = useState(false);
 
   useEffect(() => {
     getDatabase()
-      .then(db => {
-        const usuarios = db.getAllSync('SELECT * FROM usuario');
-        console.log('[DEBUG] Usuários no banco:', JSON.stringify(usuarios));
-        setDbPronto(true);
-      })
+      .then(() => setDbPronto(true))
       .catch(err => {
         console.error('[DB ERROR]', err);
-        setDbPronto(true); // deixa o app continuar mesmo com erro
+        setDbPronto(true);
       });
   }, []);
 
@@ -29,14 +29,28 @@ export default function AppRoot() {
     );
   }
 
-  if (!usuarioLogado) {
-    return <LoginScreen onLoginSuccess={setUsuarioLogado} />;
+  if (usuarioLogado) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.text}>Bem-vindo, {usuarioLogado.nome}! 🎉</Text>
+      </View>
+    );
+  }
+
+  if (telaAtual === 'cadastro') {
+    return (
+      <CadastroScreen
+        onCadastroSuccess={() => setTelaAtual('login')}
+        onVoltarLogin={() => setTelaAtual('login')}
+      />
+    );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Bem-vindo, {usuarioLogado.nome}! 🎉</Text>
-    </View>
+    <LoginScreen
+      onLoginSuccess={setUsuarioLogado}
+      onIrParaCadastro={() => setTelaAtual('cadastro')}
+    />
   );
 }
 
