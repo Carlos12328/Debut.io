@@ -6,7 +6,7 @@ export interface Usuario {
   id_usuario: EntityId;
   nome: string;
   email: string;
-  senha: string;
+  senha_hash: string;
   perfil: PerfilUsuario;
 }
 

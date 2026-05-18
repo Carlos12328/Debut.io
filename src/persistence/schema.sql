@@ -1,11 +1,10 @@
-CREATE TABLE usuario (
-    id_usuario INTEGER PRIMARY KEY AUTOINCREMENT,
-    nome TEXT,
-    email TEXT UNIQUE,
-    senha TEXT,
-    perfil TEXT CHECK
-(perfil IN
-('familiar','cerimonialista'))
+CREATE TABLE "usuario" (
+	"id_usuario"	INTEGER,
+	"nome"	TEXT,
+	"email"	TEXT UNIQUE,
+	"senha_hash"	TEXT,
+	"perfil"	TEXT CHECK("perfil" IN ('familiar', 'cerimonialista')),
+	PRIMARY KEY("id_usuario" AUTOINCREMENT)
 );
 
 CREATE TABLE evento (

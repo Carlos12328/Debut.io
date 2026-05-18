@@ -22,3 +22,9 @@ export interface FornecedorRepository extends Repository<Fornecedor> {}
 export interface PagamentoRepository extends Repository<Pagamento> {}
 export interface TarefaRepository extends Repository<Tarefa> {}
 export interface CompromissoRepository extends Repository<Compromisso> {}
+
+
+// Adicione este método à interface UsuarioRepository existente:
+export interface UsuarioRepository extends Repository<Usuario> {
+  getByEmail(email: string): Promise<Usuario | null>;
+}

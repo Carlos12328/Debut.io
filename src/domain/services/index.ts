@@ -1,28 +1,30 @@
-import {
-  EntityId,
-  Evento,
-  Pagamento,
-  Tarefa,
-  StatusTarefa,
-  Compromisso,
-} from '../models';
+import { Usuario } from '../models';
 
-export interface EventService {
-  validateBudget(event: Evento): boolean;
+// Interface do serviço de autenticação
+export interface AuthService {
+  login(email: string, senha: string): Promise<Usuario>;
 }
 
-export interface PaymentService {
-  validatePayment(payment: Pagamento): boolean;
-}
+// Implementação do serviço
+export class AuthServiceImpl implements AuthService {
+  constructor(private readonly usuarioRepository: import('../../persistence/repositories').UsuarioRepository) {}
 
-export interface TaskService {
-  updateStatus(task: Tarefa, status: StatusTarefa): Tarefa;
-}
+  async login(email: string, senha: string): Promise<Usuario> {
+    if (!email || !senha) {
+      throw new Error('E-mail e senha são obrigatórios.');
+    }
 
-export interface AppointmentService {
-  reschedule(appointment: Compromisso, startAt: string, endAt: string): Compromisso;
-}
+    const usuario = await this.usuarioRepository.getByEmail(email);
 
-export interface NotificationService {
-  notify(eventId: EntityId, message: string): void;
+    if (!usuario) {
+      throw new Error('Usuário não encontrado.');
+    }
+
+    // Comparação simples por enquanto (sem bcrypt ainda, mas preparado para ele)
+    if (usuario.senha_hash !== senha) {
+      throw new Error('Credenciais inválidas.');
+    }
+
+    return usuario;
+  }
 }
