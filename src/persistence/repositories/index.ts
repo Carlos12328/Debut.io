@@ -1,16 +1,24 @@
-import { Appointment, Event, Payment, Supplier, Task, User } from '../../domain/models';
+import {
+  EntityId,
+  Compromisso,
+  Evento,
+  Pagamento,
+  Fornecedor,
+  Tarefa,
+  Usuario,
+} from '../../domain/models';
 
 export interface Repository<T> {
-  getById(id: string): Promise<T | null>;
+  getById(id: EntityId): Promise<T | null>;
   list(): Promise<T[]>;
   create(data: T): Promise<T>;
-  update(id: string, data: Partial<T>): Promise<T>;
-  remove(id: string): Promise<void>;
+  update(id: EntityId, data: Partial<T>): Promise<T>;
+  remove(id: EntityId): Promise<void>;
 }
 
-export interface UserRepository extends Repository<User> {}
-export interface EventRepository extends Repository<Event> {}
-export interface SupplierRepository extends Repository<Supplier> {}
-export interface PaymentRepository extends Repository<Payment> {}
-export interface TaskRepository extends Repository<Task> {}
-export interface AppointmentRepository extends Repository<Appointment> {}
+export interface UsuarioRepository extends Repository<Usuario> {}
+export interface EventoRepository extends Repository<Evento> {}
+export interface FornecedorRepository extends Repository<Fornecedor> {}
+export interface PagamentoRepository extends Repository<Pagamento> {}
+export interface TarefaRepository extends Repository<Tarefa> {}
+export interface CompromissoRepository extends Repository<Compromisso> {}

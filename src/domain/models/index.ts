@@ -1,55 +1,56 @@
-export type EntityId = string;
+export type EntityId = number;
 
-export interface User {
-  id: EntityId;
-  name: string;
+export type PerfilUsuario = 'familiar' | 'cerimonialista';
+
+export interface Usuario {
+  id_usuario: EntityId;
+  nome: string;
   email: string;
+  senha: string;
+  perfil: PerfilUsuario;
 }
 
-export interface Event {
-  id: EntityId;
-  title: string;
-  date: string;
-  budget: number;
+export type StatusEvento = 'ativo' | 'encerrado';
+
+export interface Evento {
+  id_evento: EntityId;
+  id_usuario: EntityId;
+  nome: string;
+  data_evento: string;
+  orcamento: number;
+  status: StatusEvento;
 }
 
-export interface Supplier {
-  id: EntityId;
-  name: string;
-  serviceType: string;
-  contactEmail: string;
+export interface Fornecedor {
+  id_fornecedor: EntityId;
+  id_evento: EntityId;
+  nome: string;
+  tipo_servico: string;
+  valor: number;
 }
 
-export type PaymentStatus = 'pending' | 'paid' | 'overdue';
+export type StatusPagamento = 'pendente' | 'pago';
 
-export interface Payment {
-  id: EntityId;
-  eventId: EntityId;
-  amount: number;
-  status: PaymentStatus;
-  dueDate: string;
+export interface Pagamento {
+  id_pagamento: EntityId;
+  id_fornecedor: EntityId;
+  valor: number;
+  vencimento: string;
+  status: StatusPagamento;
 }
 
-export type TaskStatus = 'todo' | 'doing' | 'done';
+export type StatusTarefa = 'pendente' | 'concluida';
 
-export interface Task {
-  id: EntityId;
-  title: string;
-  status: TaskStatus;
-  dueDate: string;
+export interface Tarefa {
+  id_tarefa: EntityId;
+  id_evento: EntityId;
+  descricao: string;
+  status: StatusTarefa;
 }
 
-export interface Appointment {
-  id: EntityId;
-  title: string;
-  startAt: string;
-  endAt: string;
-}
-
-export interface ChangeLog {
-  id: EntityId;
-  entity: string;
-  entityId: EntityId;
-  changedAt: string;
-  summary: string;
+export interface Compromisso {
+  id_compromisso: EntityId;
+  id_evento: EntityId;
+  descricao: string;
+  data_compromisso: string;
 }

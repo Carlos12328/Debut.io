@@ -1,27 +1,28 @@
 import {
-  Appointment,
-  Event,
-  Payment,
-  Task,
-  TaskStatus,
+  EntityId,
+  Evento,
+  Pagamento,
+  Tarefa,
+  StatusTarefa,
+  Compromisso,
 } from '../models';
 
 export interface EventService {
-  validateBudget(event: Event): boolean;
+  validateBudget(event: Evento): boolean;
 }
 
 export interface PaymentService {
-  validatePayment(payment: Payment): boolean;
+  validatePayment(payment: Pagamento): boolean;
 }
 
 export interface TaskService {
-  updateStatus(task: Task, status: TaskStatus): Task;
+  updateStatus(task: Tarefa, status: StatusTarefa): Tarefa;
 }
 
 export interface AppointmentService {
-  reschedule(appointment: Appointment, startAt: string, endAt: string): Appointment;
+  reschedule(appointment: Compromisso, startAt: string, endAt: string): Compromisso;
 }
 
 export interface NotificationService {
-  notify(eventId: string, message: string): void;
+  notify(eventId: EntityId, message: string): void;
 }
