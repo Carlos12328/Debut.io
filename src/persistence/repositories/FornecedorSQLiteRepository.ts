@@ -28,13 +28,30 @@ export class FornecedorSQLiteRepository implements FornecedorRepository {
   async create(data: Fornecedor): Promise<Fornecedor> {
     const db = await getDatabase();
     db.runSync(
-      'INSERT INTO fornecedor (id_evento, nome, tipo_servico, valor) VALUES (?, ?, ?, ?)',
-      [data.id_evento, data.nome, data.tipo_servico, data.valor]
+      `INSERT INTO fornecedor
+        (id_evento, nome, tipo_servico, valor, cnpj, telefone, email,
+         endereco_logradouro, endereco_numero, endereco_bairro,
+         endereco_cidade, endereco_estado, endereco_cep)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        data.id_evento,
+        data.nome,
+        data.tipo_servico,
+        data.valor,
+        data.cnpj ?? null,
+        data.telefone ?? null,
+        data.email ?? null,
+        data.endereco_logradouro ?? null,
+        data.endereco_numero ?? null,
+        data.endereco_bairro ?? null,
+        data.endereco_cidade ?? null,
+        data.endereco_estado ?? null,
+        data.endereco_cep ?? null,
+      ]
     );
     const lista = await this.getByEvento(data.id_evento);
     return lista[lista.length - 1];
   }
-
   async update(id: EntityId, data: Partial<Fornecedor>): Promise<Fornecedor> {
     const db = await getDatabase();
     const campos = Object.keys(data).map((k) => `${k} = ?`).join(', ');
