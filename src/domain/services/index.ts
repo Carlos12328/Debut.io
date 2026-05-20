@@ -93,6 +93,14 @@ export class EventoServiceImpl implements EventoService {
     if (!nome) throw new Error('O nome do evento é obrigatório.');
     if (!data_evento) throw new Error('A data do evento é obrigatória.');
     if (orcamento <= 0) throw new Error('O orçamento deve ser maior que zero.');
+
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    const dataInformada = new Date(data_evento);
+    if (dataInformada < hoje) {
+      throw new Error('A data do evento não pode ser uma data passada.');
+    }
+
     const novoEvento: Evento = { id_evento: 0, id_usuario, nome, data_evento, orcamento, status: 'ativo' };
     return await this.eventoRepository.create(novoEvento);
   }
@@ -176,3 +184,4 @@ export class FornecedorServiceImpl implements FornecedorService {
     return await this.fornecedorRepository.remove(id_fornecedor);
   }
 }
+
