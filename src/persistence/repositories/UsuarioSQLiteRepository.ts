@@ -29,8 +29,25 @@ export class UsuarioSQLiteRepository implements UsuarioRepository {
   async create(data: Usuario): Promise<Usuario> {
     const db = await getDatabase();
     db.runSync(
-      'INSERT INTO usuario (nome, email, senha_hash, perfil) VALUES (?, ?, ?, ?)',
-      [data.nome, data.email, data.senha_hash, data.perfil]
+      `INSERT INTO usuario 
+        (nome, email, senha_hash, perfil, cpf, data_nascimento,
+         endereco_logradouro, endereco_numero, endereco_bairro,
+         endereco_cidade, endereco_estado, endereco_cep)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        data.nome,
+        data.email,
+        data.senha_hash,
+        data.perfil,
+        data.cpf ?? null,
+        data.data_nascimento ?? null,
+        data.endereco_logradouro ?? null,
+        data.endereco_numero ?? null,
+        data.endereco_bairro ?? null,
+        data.endereco_cidade ?? null,
+        data.endereco_estado ?? null,
+        data.endereco_cep ?? null,
+      ]
     );
     const novo = await this.getByEmail(data.email);
     return novo!;
