@@ -21,7 +21,15 @@ export class CadastroPresenter {
     email: string,
     senha: string,
     confirmarSenha: string,
-    perfil: PerfilUsuario
+    perfil: PerfilUsuario,
+    cpf: string,
+    data_nascimento?: string,
+    endereco_logradouro?: string,
+    endereco_numero?: string,
+    endereco_bairro?: string,
+    endereco_cidade?: string,
+    endereco_estado?: string,
+    endereco_cep?: string,
   ) {
     if (!this.view) return;
     if (senha !== confirmarSenha) {
@@ -30,7 +38,20 @@ export class CadastroPresenter {
     }
     this.view.showLoading();
     try {
-      const usuario = await this.cadastroService.cadastrar(nome, email, senha, perfil);
+      const usuario = await this.cadastroService.cadastrar(
+        nome,
+        email,
+        senha,
+        perfil,
+        cpf,
+        data_nascimento,
+        endereco_logradouro,
+        endereco_numero,
+        endereco_bairro,
+        endereco_cidade,
+        endereco_estado,
+        endereco_cep,
+      );
       this.view.onCadastroSuccess(usuario);
     } catch (error: any) {
       this.view.showError(error.message ?? 'Erro ao cadastrar.');

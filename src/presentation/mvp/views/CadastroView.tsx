@@ -18,6 +18,14 @@ export function CadastroView({ presenter, onCadastroSuccess, onVoltarLogin }: Pr
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
   const [perfil, setPerfil] = useState<PerfilUsuario>('familiar');
+  const [cpf, setCpf] = useState('');
+  const [dataNascimento, setDataNascimento] = useState('');
+  const [cep, setCep] = useState('');
+  const [logradouro, setLogradouro] = useState('');
+  const [numero, setNumero] = useState('');
+  const [bairro, setBairro] = useState('');
+  const [cidade, setCidade] = useState('');
+  const [estado, setEstado] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -36,11 +44,54 @@ export function CadastroView({ presenter, onCadastroSuccess, onVoltarLogin }: Pr
       <Text style={styles.title}>Debut.io</Text>
       <Text style={styles.subtitle}>Criar conta</Text>
 
-      <TextInput style={styles.input} placeholder="Nome completo" value={nome} onChangeText={setNome} />
-      <TextInput style={styles.input} placeholder="E-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
-      <TextInput style={styles.input} placeholder="Senha" value={senha} onChangeText={setSenha} secureTextEntry />
-      <TextInput style={styles.input} placeholder="Confirmar senha" value={confirmarSenha} onChangeText={setConfirmarSenha} secureTextEntry />
+      {/* Dados pessoais */}
+      <Text style={styles.sectionTitle}>Dados pessoais</Text>
 
+      <TextInput
+        style={styles.input}
+        placeholder="Nome completo *"
+        value={nome}
+        onChangeText={setNome}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="E-mail *"
+        value={email}
+        onChangeText={setEmail}
+        autoCapitalize="none"
+        keyboardType="email-address"
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="CPF * (000.000.000-00)"
+        value={cpf}
+        onChangeText={setCpf}
+        keyboardType="numeric"
+        maxLength={14}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Data de nascimento (AAAA-MM-DD)"
+        value={dataNascimento}
+        onChangeText={setDataNascimento}
+        keyboardType="numeric"
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Senha *"
+        value={senha}
+        onChangeText={setSenha}
+        secureTextEntry
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Confirmar senha *"
+        value={confirmarSenha}
+        onChangeText={setConfirmarSenha}
+        secureTextEntry
+      />
+
+      {/* Perfil */}
       <Text style={styles.label}>Perfil</Text>
       <View style={styles.perfilContainer}>
         {(['familiar', 'cerimonialista'] as PerfilUsuario[]).map((p) => (
@@ -56,12 +107,68 @@ export function CadastroView({ presenter, onCadastroSuccess, onVoltarLogin }: Pr
         ))}
       </View>
 
+      {/* Endereço */}
+      <Text style={styles.sectionTitle}>Endereço</Text>
+
+      <TextInput
+        style={styles.input}
+        placeholder="CEP (00000-000)"
+        value={cep}
+        onChangeText={setCep}
+        keyboardType="numeric"
+        maxLength={9}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Logradouro (rua, avenida...)"
+        value={logradouro}
+        onChangeText={setLogradouro}
+      />
+      <View style={styles.row}>
+        <TextInput
+          style={[styles.input, styles.inputNumero]}
+          placeholder="Número"
+          value={numero}
+          onChangeText={setNumero}
+          keyboardType="numeric"
+        />
+        <TextInput
+          style={[styles.input, styles.inputBairro]}
+          placeholder="Bairro"
+          value={bairro}
+          onChangeText={setBairro}
+        />
+      </View>
+      <View style={styles.row}>
+        <TextInput
+          style={[styles.input, styles.inputCidade]}
+          placeholder="Cidade"
+          value={cidade}
+          onChangeText={setCidade}
+        />
+        <TextInput
+          style={[styles.input, styles.inputEstado]}
+          placeholder="UF"
+          value={estado}
+          onChangeText={setEstado}
+          maxLength={2}
+          autoCapitalize="characters"
+        />
+      </View>
+
       <TouchableOpacity
         style={styles.button}
-        onPress={() => presenter.handleCadastro(nome, email, senha, confirmarSenha, perfil)}
+        onPress={() => presenter.handleCadastro(
+          nome, email, senha, confirmarSenha, perfil,
+          cpf, dataNascimento,
+          logradouro, numero, bairro, cidade, estado, cep
+        )}
         disabled={loading}
       >
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Cadastrar</Text>}
+        {loading
+          ? <ActivityIndicator color="#fff" />
+          : <Text style={styles.buttonText}>Cadastrar</Text>
+        }
       </TouchableOpacity>
 
       <TouchableOpacity onPress={onVoltarLogin} style={styles.linkContainer}>
@@ -72,9 +179,10 @@ export function CadastroView({ presenter, onCadastroSuccess, onVoltarLogin }: Pr
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, justifyContent: 'center', padding: 24, backgroundColor: '#fff' },
+  container: { flexGrow: 1, padding: 24, backgroundColor: '#fff' },
   title: { fontSize: 32, fontWeight: 'bold', color: '#9b59b6', textAlign: 'center', marginBottom: 4 },
   subtitle: { fontSize: 16, color: '#888', textAlign: 'center', marginBottom: 24 },
+  sectionTitle: { fontSize: 15, fontWeight: '600', color: '#9b59b6', marginBottom: 12, marginTop: 8 },
   input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 16 },
   label: { fontSize: 14, color: '#555', marginBottom: 8 },
   perfilContainer: { flexDirection: 'row', gap: 12, marginBottom: 24 },
@@ -82,7 +190,12 @@ const styles = StyleSheet.create({
   perfilBtnAtivo: { backgroundColor: '#9b59b6' },
   perfilBtnText: { color: '#9b59b6', fontWeight: '600' },
   perfilBtnTextAtivo: { color: '#fff' },
-  button: { backgroundColor: '#9b59b6', padding: 14, borderRadius: 8, alignItems: 'center', marginBottom: 16 },
+  row: { flexDirection: 'row', gap: 12 },
+  inputNumero: { flex: 1 },
+  inputBairro: { flex: 2 },
+  inputCidade: { flex: 2 },
+  inputEstado: { flex: 1 },
+  button: { backgroundColor: '#9b59b6', padding: 14, borderRadius: 8, alignItems: 'center', marginBottom: 16, marginTop: 8 },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   linkContainer: { alignItems: 'center' },
   link: { color: '#9b59b6', fontSize: 14 },

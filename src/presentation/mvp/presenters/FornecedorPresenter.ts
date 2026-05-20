@@ -34,7 +34,20 @@ export class FornecedorPresenter {
     }
   }
 
-  async handleCadastrar(nome: string, tipo_servico: string, valor: string) {
+  async handleCadastrar(
+    nome: string,
+    tipo_servico: string,
+    valor: string,
+    cnpj?: string,
+    telefone?: string,
+    email?: string,
+    endereco_logradouro?: string,
+    endereco_numero?: string,
+    endereco_bairro?: string,
+    endereco_cidade?: string,
+    endereco_estado?: string,
+    endereco_cep?: string,
+  ) {
     if (!this.view) return;
     const valorNum = parseFloat(valor.replace(',', '.'));
     if (isNaN(valorNum)) {
@@ -43,7 +56,12 @@ export class FornecedorPresenter {
     }
     this.view.showLoading();
     try {
-      const fornecedor = await this.fornecedorService.cadastrar(this.id_evento, nome, tipo_servico, valorNum);
+      const fornecedor = await this.fornecedorService.cadastrar(
+        this.id_evento, nome, tipo_servico, valorNum,
+        cnpj, telefone, email,
+        endereco_logradouro, endereco_numero, endereco_bairro,
+        endereco_cidade, endereco_estado, endereco_cep,
+      );
       this.view.onFornecedorCadastrado(fornecedor);
     } catch (error: any) {
       this.view.showError(error.message ?? 'Erro ao cadastrar fornecedor.');
