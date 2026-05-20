@@ -7,7 +7,7 @@ export interface AuthService {
 }
 
 export class AuthServiceImpl implements AuthService {
-  constructor(private readonly usuarioRepository: UsuarioRepository) {}
+  constructor(private readonly usuarioRepository: UsuarioRepository) { }
 
   async login(email: string, senha: string): Promise<Usuario> {
     if (!email || !senha) throw new Error('E-mail e senha são obrigatórios.');
@@ -20,19 +20,61 @@ export class AuthServiceImpl implements AuthService {
 
 // ─── Cadastro ────────────────────────────────────────────
 export interface CadastroService {
-  cadastrar(nome: string, email: string, senha: string, perfil: PerfilUsuario): Promise<Usuario>;
+  cadastrar(
+    nome: string,
+    email: string,
+    senha: string,
+    perfil: PerfilUsuario,
+    cpf: string,
+    data_nascimento?: string,
+    endereco_logradouro?: string,
+    endereco_numero?: string,
+    endereco_bairro?: string,
+    endereco_cidade?: string,
+    endereco_estado?: string,
+    endereco_cep?: string,
+  ): Promise<Usuario>;
 }
 
 export class CadastroServiceImpl implements CadastroService {
-  constructor(private readonly usuarioRepository: UsuarioRepository) {}
+  constructor(private readonly usuarioRepository: UsuarioRepository) { }
 
-  async cadastrar(nome: string, email: string, senha: string, perfil: PerfilUsuario): Promise<Usuario> {
+  async cadastrar(
+    nome: string,
+    email: string,
+    senha: string,
+    perfil: PerfilUsuario,
+    cpf: string,
+    data_nascimento?: string,
+    endereco_logradouro?: string,
+    endereco_numero?: string,
+    endereco_bairro?: string,
+    endereco_cidade?: string,
+    endereco_estado?: string,
+    endereco_cep?: string,
+  ): Promise<Usuario> {
     if (!nome || !email || !senha) throw new Error('Todos os campos são obrigatórios.');
+    if (!cpf) throw new Error('O CPF é obrigatório.');
     if (!email.includes('@')) throw new Error('E-mail inválido.');
     if (senha.length < 6) throw new Error('A senha deve ter pelo menos 6 caracteres.');
     const existente = await this.usuarioRepository.getByEmail(email);
     if (existente) throw new Error('Já existe uma conta com este e-mail.');
-    const novoUsuario = { id_usuario: 0, nome, email, senha_hash: senha, perfil };
+
+    const novoUsuario: Usuario = {
+      id_usuario: 0,
+      nome,
+      email,
+      senha_hash: senha,
+      perfil,
+      cpf,
+      data_nascimento,
+      endereco_logradouro,
+      endereco_numero,
+      endereco_bairro,
+      endereco_cidade,
+      endereco_estado,
+      endereco_cep,
+    };
     return await this.usuarioRepository.create(novoUsuario);
   }
 }
@@ -45,7 +87,7 @@ export interface EventoService {
 }
 
 export class EventoServiceImpl implements EventoService {
-  constructor(private readonly eventoRepository: EventoRepository) {}
+  constructor(private readonly eventoRepository: EventoRepository) { }
 
   async cadastrar(id_usuario: number, nome: string, data_evento: string, orcamento: number): Promise<Evento> {
     if (!nome) throw new Error('O nome do evento é obrigatório.');
@@ -66,19 +108,63 @@ export class EventoServiceImpl implements EventoService {
 
 // ─── Fornecedor ──────────────────────────────────────────
 export interface FornecedorService {
-  cadastrar(id_evento: number, nome: string, tipo_servico: string, valor: number): Promise<Fornecedor>;
+  cadastrar(
+    id_evento: number,
+    nome: string,
+    tipo_servico: string,
+    valor: number,
+    cnpj?: string,
+    telefone?: string,
+    email?: string,
+    endereco_logradouro?: string,
+    endereco_numero?: string,
+    endereco_bairro?: string,
+    endereco_cidade?: string,
+    endereco_estado?: string,
+    endereco_cep?: string,
+  ): Promise<Fornecedor>;
   listar(id_evento: number): Promise<Fornecedor[]>;
   remover(id_fornecedor: number): Promise<void>;
 }
 
 export class FornecedorServiceImpl implements FornecedorService {
-  constructor(private readonly fornecedorRepository: FornecedorRepository) {}
+  constructor(private readonly fornecedorRepository: FornecedorRepository) { }
 
-  async cadastrar(id_evento: number, nome: string, tipo_servico: string, valor: number): Promise<Fornecedor> {
+  async cadastrar(
+    id_evento: number,
+    nome: string,
+    tipo_servico: string,
+    valor: number,
+    cnpj?: string,
+    telefone?: string,
+    email?: string,
+    endereco_logradouro?: string,
+    endereco_numero?: string,
+    endereco_bairro?: string,
+    endereco_cidade?: string,
+    endereco_estado?: string,
+    endereco_cep?: string,
+  ): Promise<Fornecedor> {
     if (!nome) throw new Error('O nome do fornecedor é obrigatório.');
     if (!tipo_servico) throw new Error('O tipo de serviço é obrigatório.');
     if (valor <= 0) throw new Error('O valor deve ser maior que zero.');
-    const novo: Fornecedor = { id_fornecedor: 0, id_evento, nome, tipo_servico, valor };
+
+    const novo: Fornecedor = {
+      id_fornecedor: 0,
+      id_evento,
+      nome,
+      tipo_servico,
+      valor,
+      cnpj,
+      telefone,
+      email,
+      endereco_logradouro,
+      endereco_numero,
+      endereco_bairro,
+      endereco_cidade,
+      endereco_estado,
+      endereco_cep,
+    };
     return await this.fornecedorRepository.create(novo);
   }
 
