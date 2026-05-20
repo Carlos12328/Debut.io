@@ -8,8 +8,15 @@ export interface Usuario {
   email: string;
   senha_hash: string;
   perfil: PerfilUsuario;
+  cpf?: string;
+  data_nascimento?: string;
+  endereco_logradouro?: string;
+  endereco_numero?: string;
+  endereco_bairro?: string;
+  endereco_cidade?: string;
+  endereco_estado?: string;
+  endereco_cep?: string;
 }
-
 export type StatusEvento = 'ativo' | 'encerrado';
 
 export interface Evento {
@@ -27,8 +34,16 @@ export interface Fornecedor {
   nome: string;
   tipo_servico: string;
   valor: number;
+  cnpj?: string;
+  telefone?: string;
+  email?: string;
+  endereco_logradouro?: string;
+  endereco_numero?: string;
+  endereco_bairro?: string;
+  endereco_cidade?: string;
+  endereco_estado?: string;
+  endereco_cep?: string;
 }
-
 export type StatusPagamento = 'pendente' | 'pago';
 
 export interface Pagamento {
@@ -54,3 +69,4 @@ export interface Compromisso {
   descricao: string;
   data_compromisso: string;
 }
+
