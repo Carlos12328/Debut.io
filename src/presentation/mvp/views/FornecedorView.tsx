@@ -83,6 +83,36 @@ export function FornecedorView({ presenter, nomeEvento, onVoltar }: Props) {
     </View>
   );
 
+  const aplicarMascaraCnpj = (valor: string): string => {
+  const n = valor.replace(/\D/g, '').slice(0, 14);
+  if (n.length <= 2) return n;
+  if (n.length <= 5) return `${n.slice(0,2)}.${n.slice(2)}`;
+  if (n.length <= 8) return `${n.slice(0,2)}.${n.slice(2,5)}.${n.slice(5)}`;
+  if (n.length <= 12) return `${n.slice(0,2)}.${n.slice(2,5)}.${n.slice(5,8)}/${n.slice(8)}`;
+  return `${n.slice(0,2)}.${n.slice(2,5)}.${n.slice(5,8)}/${n.slice(8,12)}-${n.slice(12)}`;
+};
+
+const aplicarMascaraTelefone = (valor: string): string => {
+  const n = valor.replace(/\D/g, '').slice(0, 11);
+  if (n.length <= 2) return `(${n}`;
+  if (n.length <= 6) return `(${n.slice(0,2)}) ${n.slice(2)}`;
+  if (n.length <= 10) return `(${n.slice(0,2)}) ${n.slice(2,6)}-${n.slice(6)}`;
+  return `(${n.slice(0,2)}) ${n.slice(2,7)}-${n.slice(7)}`;
+};
+
+const aplicarMascaraCep = (valor: string): string => {
+  const n = valor.replace(/\D/g, '').slice(0, 8);
+  if (n.length <= 5) return n;
+  return `${n.slice(0,5)}-${n.slice(5)}`;
+};
+
+const aplicarMascaraValor = (valor: string): string => {
+  const n = valor.replace(/\D/g, '').slice(0, 10);
+  if (!n) return '';
+  const inteiro = parseInt(n, 10);
+  return (inteiro / 100).toFixed(2).replace('.', ',');
+};
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -114,32 +144,135 @@ export function FornecedorView({ presenter, nomeEvento, onVoltar }: Props) {
       />
 
       <Modal visible={modalVisivel} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <ScrollView contentContainerStyle={styles.modalContent}>
-            <Text style={styles.modalTitulo}>Novo Fornecedor</Text>
+      <View style={styles.modalOverlay}>
+        <ScrollView contentContainerStyle={styles.modalContent}>
+      <Text style={styles.modalTitulo}>Novo Fornecedor</Text>
 
-            <Text style={styles.secao}>Dados básicos</Text>
-            <TextInput style={styles.input} placeholder="Nome do fornecedor *" value={nome} onChangeText={setNome} />
-            <TextInput style={styles.input} placeholder="Tipo de serviço (ex: Buffet) *" value={tipoServico} onChangeText={setTipoServico} />
-            <TextInput style={styles.input} placeholder="Valor contratado (ex: 3000.00) *" value={valor} onChangeText={setValor} keyboardType="numeric" />
+      <Text style={styles.secao}>Dados basicos</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Nome do fornecedor *"
+        value={nome}
+        onChangeText={setNome}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Tipo de servico (ex: Buffet) *"
+        value={tipoServico}
+        onChangeText={setTipoServico}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Valor contratado (ex: 3.000,00) *"
+        value={valor}
+        onChangeText={(texto) => setValor(aplicarMascaraValor(texto))}
+        keyboardType="numeric"
+        maxLength={14}
+      />
 
-            <Text style={styles.secao}>Contato</Text>
-            <TextInput style={styles.input} placeholder="CNPJ (00.000.000/0000-00)" value={cnpj} onChangeText={setCnpj} keyboardType="numeric" maxLength={18} />
-            <TextInput style={styles.input} placeholder="Telefone (61) 99999-9999" value={telefone} onChangeText={setTelefone} keyboardType="phone-pad" />
-            <TextInput style={styles.input} placeholder="E-mail do fornecedor" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
+      <Text style={styles.secao}>Contato</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="CNPJ (00.000.000/0000-00)"
+        value={cnpj}
+        onChangeText={(texto) => setCnpj(aplicarMascaraCnpj(texto))}
+        keyboardType="numeric"
+        maxLength={18}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Telefone (61) 99999-9999"
+        value={telefone}
+        onChangeText={(texto) => setTelefone(aplicarMascaraTelefone(texto))}
+        keyboardType="numeric"
+        maxLength={15}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="E-mail do fornecedor"
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+      />
 
-            <Text style={styles.secao}>Endereço</Text>
-            <TextInput style={styles.input} placeholder="CEP (00000-000)" value={cep} onChangeText={setCep} keyboardType="numeric" maxLength={9} />
-            <TextInput style={styles.input} placeholder="Logradouro (rua, avenida...)" value={logradouro} onChangeText={setLogradouro} />
-            <View style={styles.row}>
-              <TextInput style={[styles.input, styles.inputNumero]} placeholder="Número" value={numero} onChangeText={setNumero} keyboardType="numeric" />
-              <TextInput style={[styles.input, styles.inputBairro]} placeholder="Bairro" value={bairro} onChangeText={setBairro} />
-            </View>
-            <View style={styles.row}>
-              <TextInput style={[styles.input, styles.inputCidade]} placeholder="Cidade" value={cidade} onChangeText={setCidade} />
-              <TextInput style={[styles.input, styles.inputEstado]} placeholder="UF" value={estado} onChangeText={setEstado} maxLength={2} autoCapitalize="characters" />
-            </View>
+      <Text style={styles.secao}>Endereco</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="CEP (00000-000)"
+        value={cep}
+        onChangeText={(texto) => setCep(aplicarMascaraCep(texto))}
+        keyboardType="numeric"
+        maxLength={9}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Logradouro (rua, avenida...)"
+        value={logradouro}
+        onChangeText={setLogradouro}
+      />
+      <View style={styles.row}>
+        <TextInput
+          style={[styles.input, styles.inputNumero]}
+          placeholder="Numero"
+          value={numero}
+          onChangeText={setNumero}
+          keyboardType="numeric"
+        />
+        <TextInput
+          style={[styles.input, styles.inputBairro]}
+          placeholder="Bairro"
+          value={bairro}
+          onChangeText={setBairro}
+        />
+      </View>
+      <View style={styles.row}>
+        <TextInput
+          style={[styles.input, styles.inputCidade]}
+          placeholder="Cidade"
+          value={cidade}
+          onChangeText={setCidade}
+        />
+        <TextInput
+          style={[styles.input, styles.inputEstado]}
+          placeholder="UF"
+          value={estado}
+          onChangeText={setEstado}
+          maxLength={2}
+          autoCapitalize="characters"
+        />
+      </View>
 
+      <TouchableOpacity
+        style={styles.btnSalvar}
+        onPress={() => presenter.handleCadastrar(
+          nome,
+          tipoServico,
+          valor.replace(',', '.'),
+          cnpj.replace(/\D/g, ''),
+          telefone.replace(/\D/g, ''),
+          email,
+          logradouro,
+          numero,
+          bairro,
+          cidade,
+          estado,
+          cep.replace(/\D/g, '')
+        )}
+        disabled={loading}
+      >
+        {loading
+          ? <ActivityIndicator color="#fff" />
+          : <Text style={styles.btnSalvarText}>Salvar</Text>
+        }
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.btnCancelar} onPress={() => setModalVisivel(false)}>
+        <Text style={styles.btnCancelarText}>Cancelar</Text>
+      </TouchableOpacity>
+
+    </ScrollView>
+  </View>
             <TouchableOpacity
               style={styles.btnSalvar}
               onPress={() => presenter.handleCadastrar(
