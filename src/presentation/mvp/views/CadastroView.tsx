@@ -46,6 +46,14 @@ export function CadastroView({ presenter, onCadastroSuccess, onVoltarLogin }: Pr
   return `${numeros.slice(0,2)}/${numeros.slice(2,4)}/${numeros.slice(4)}`;
 };
 
+const aplicarMascaraCpf = (valor: string): string => {
+  const numeros = valor.replace(/\D/g, '').slice(0, 11);
+  if (numeros.length <= 3) return numeros;
+  if (numeros.length <= 6) return `${numeros.slice(0,3)}.${numeros.slice(3)}`;
+  if (numeros.length <= 9) return `${numeros.slice(0,3)}.${numeros.slice(3,6)}.${numeros.slice(6)}`;
+  return `${numeros.slice(0,3)}.${numeros.slice(3,6)}.${numeros.slice(6,9)}-${numeros.slice(9)}`;
+};
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Debut.io</Text>
@@ -72,7 +80,7 @@ export function CadastroView({ presenter, onCadastroSuccess, onVoltarLogin }: Pr
         style={styles.input}
         placeholder="CPF * (000.000.000-00)"
         value={cpf}
-        onChangeText={setCpf}
+        onChangeText={(texto) => setCpf(aplicarMascaraCpf(texto))}
         keyboardType="numeric"
         maxLength={14}
       />
@@ -171,13 +179,13 @@ export function CadastroView({ presenter, onCadastroSuccess, onVoltarLogin }: Pr
           if (dataNascimento.length === 10) {
           const [dd, mm, aaaa] = dataNascimento.split('/');
           dataBanco = `${aaaa}-${mm}-${dd}`;}
-
+          const cpfLimpo = cpf.replace(/\D/g, '');
           presenter.handleCadastro(
           nome, email, senha, confirmarSenha, perfil,
-          cpf, dataBanco || dataNascimento,
+          cpfLimpo, dataBanco || dataNascimento,
           logradouro, numero, bairro, cidade, estado, cep);
-      }}
-
+        }}
+        
         disabled={loading}
       >
         {loading
