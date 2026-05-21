@@ -54,6 +54,12 @@ const aplicarMascaraCpf = (valor: string): string => {
   return `${numeros.slice(0,3)}.${numeros.slice(3,6)}.${numeros.slice(6,9)}-${numeros.slice(9)}`;
 };
 
+const aplicarMascaraCep = (valor: string): string => {
+  const n = valor.replace(/\D/g, '').slice(0, 8);
+  if (n.length <= 5) return n;
+  return `${n.slice(0,5)}-${n.slice(5)}`;
+};
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Debut.io</Text>
@@ -127,12 +133,12 @@ const aplicarMascaraCpf = (valor: string): string => {
       <Text style={styles.sectionTitle}>Endereço</Text>
 
       <TextInput
-        style={styles.input}
-        placeholder="CEP (00000-000)"
-        value={cep}
-        onChangeText={setCep}
-        keyboardType="numeric"
-        maxLength={9}
+       style={styles.input}
+       placeholder="CEP (00000-000)"
+       value={cep}
+       onChangeText={(texto) => setCep(aplicarMascaraCep(texto))}
+       keyboardType="numeric"
+       maxLength={9}
       />
       <TextInput
         style={styles.input}
@@ -177,14 +183,19 @@ const aplicarMascaraCpf = (valor: string): string => {
           onPress={() => {
           let dataBanco = '';
           if (dataNascimento.length === 10) {
+
           const [dd, mm, aaaa] = dataNascimento.split('/');
+          
           dataBanco = `${aaaa}-${mm}-${dd}`;}
+
           const cpfLimpo = cpf.replace(/\D/g, '');
+
+          const cepLimpo = cep.replace(/\D/g, '');
+
           presenter.handleCadastro(
           nome, email, senha, confirmarSenha, perfil,
           cpfLimpo, dataBanco || dataNascimento,
-          logradouro, numero, bairro, cidade, estado, cep);
-        }}
+          logradouro, numero, bairro, cidade, estado, cepLimpo);
         
         disabled={loading}
       >
