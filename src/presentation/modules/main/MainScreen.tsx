@@ -15,12 +15,12 @@ interface Props {
   onVoltarEventos: () => void;
 }
 
-const ABAS: { id: Aba; label: string}[] = [
-  { id: 'dashboard', label: 'Início'},
-  { id: 'fornecedores', label: 'Fornecedor'},
-  { id: 'financeiro', label: 'Finanças'},
-  { id: 'tarefas', label: 'Tarefas'},
-  { id: 'agenda', label: 'Agenda'},
+const ABAS: { id: Aba; label: string }[] = [
+  { id: 'dashboard', label: 'Inicio' },
+  { id: 'fornecedores', label: 'Fornecedor' },
+  { id: 'financeiro', label: 'Financas' },
+  { id: 'tarefas', label: 'Tarefas' },
+  { id: 'agenda', label: 'Agenda' },
 ];
 
 export function MainScreen({ usuario, evento, onVoltarEventos }: Props) {
@@ -28,82 +28,63 @@ export function MainScreen({ usuario, evento, onVoltarEventos }: Props) {
 
   const renderConteudo = () => {
     switch (abaAtual) {
-      case 'dashboard':    return <DashboardScreen evento={evento} />;
+      case 'dashboard': return <DashboardScreen evento={evento} />;
       case 'fornecedores': return <FornecedorScreen evento={evento} onVoltar={onVoltarEventos} />;
-      case 'financeiro':   return <FinanceiroScreen evento={evento} />;
-      case 'tarefas':      return <TarefasScreen evento={evento} />;
-      case 'agenda':       return <AgendaScreen evento={evento} />;
+      case 'financeiro': return <FinanceiroScreen evento={evento} />;
+      case 'tarefas': return <TarefasScreen evento={evento} />;
+      case 'agenda': return <AgendaScreen evento={evento} />;
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
+
       <View style={styles.header}>
         <TouchableOpacity onPress={onVoltarEventos}>
-          <Text style={styles.btnVoltar}>← Eventos</Text>
+          <Text style={styles.btnVoltar}>Voltar</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitulo} numberOfLines={1}>{evento.nome}</Text>
-        <Text style={styles.headerPerfil}>{usuario.perfil === 'familiar'}</Text>
+        <Text style={styles.headerPerfil}>
+          {usuario.perfil === 'familiar' ? 'Familiar' : 'Cerimonialista'}
+        </Text>
       </View>
 
-      {/* Conteúdo da aba */}
       <View style={styles.conteudo}>
         {renderConteudo()}
       </View>
 
-      {/* Tab Bar */}
       <View style={styles.tabBar}>
         {ABAS.map((aba) => (
           <TouchableOpacity
             key={aba.id}
-            style={styles.tabItem}
+            style={styles.tab}
             onPress={() => setAbaAtual(aba.id)}
           >
-            <Text style={styles.tabIcone}>{aba.icone}</Text>
-            <Text style={[styles.tabLabel, abaAtual === aba.id && styles.tabLabelAtivo]}>
+            <Text style={[
+              styles.tabLabel,
+              abaAtual === aba.id && styles.tabLabelAtivo
+            ]}>
               {aba.label}
             </Text>
             {abaAtual === aba.id && <View style={styles.tabIndicador} />}
           </TouchableOpacity>
         ))}
       </View>
+
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#9b59b6',
-    padding: 16,
-    paddingTop: 48,
-  },
-  btnVoltar: { color: '#fff', fontSize: 14 },
-  headerTitulo: { flex: 1, color: '#fff', fontSize: 16, fontWeight: 'bold', textAlign: 'center', marginHorizontal: 8 },
-  headerPerfil: { fontSize: 20 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#9b59b6', paddingHorizontal: 16, paddingVertical: 12 },
+  btnVoltar: { color: '#fff', fontSize: 13 },
+  headerTitulo: { flex: 1, fontSize: 15, fontWeight: '500', color: '#fff', textAlign: 'center', marginHorizontal: 8 },
+  headerPerfil: { fontSize: 11, color: '#e8d5f5' },
   conteudo: { flex: 1 },
-  tabBar: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-    paddingBottom: 8,
-    elevation: 8,
-  },
-  tabItem: { flex: 1, alignItems: 'center', paddingTop: 8, position: 'relative' },
-  tabIcone: { fontSize: 20 },
-  tabLabel: { fontSize: 10, color: '#aaa', marginTop: 2 },
-  tabLabelAtivo: { color: '#9b59b6', fontWeight: 'bold' },
-  tabIndicador: {
-    position: 'absolute',
-    top: 0,
-    width: 24,
-    height: 3,
-    backgroundColor: '#9b59b6',
-    borderRadius: 2,
-  },
+  tabBar: { flexDirection: 'row', backgroundColor: '#fff', borderTopWidth: 0.5, borderTopColor: '#ddd' },
+  tab: { flex: 1, alignItems: 'center', paddingVertical: 10, position: 'relative' },
+  tabLabel: { fontSize: 11, color: '#aaa' },
+  tabLabelAtivo: { color: '#9b59b6', fontWeight: '500' },
+  tabIndicador: { position: 'absolute', bottom: 0, width: 24, height: 3, backgroundColor: '#9b59b6', borderRadius: 2 },
 });
