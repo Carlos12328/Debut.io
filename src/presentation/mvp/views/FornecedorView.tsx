@@ -265,13 +265,6 @@ const aplicarMascaraValor = (valor: string): string => {
           ? <ActivityIndicator color="#fff" />
           : <Text style={styles.btnSalvarText}>Salvar</Text>
         }
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.btnCancelar} onPress={() => setModalVisivel(false)}>
-        <Text style={styles.btnCancelarText}>Cancelar</Text>
-      </TouchableOpacity>
-
-    </ScrollView>
   </View>
             <TouchableOpacity
               style={styles.btnSalvar}
