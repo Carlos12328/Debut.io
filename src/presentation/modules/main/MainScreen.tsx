@@ -15,12 +15,12 @@ interface Props {
   onVoltarEventos: () => void;
 }
 
-const ABAS: { id: Aba; label: string; icone: string }[] = [
-  { id: 'dashboard', label: 'Início', icone: '🏠' },
-  { id: 'fornecedores', label: 'Fornecedor', icone: '🤝' },
-  { id: 'financeiro', label: 'Finanças', icone: '💰' },
-  { id: 'tarefas', label: 'Tarefas', icone: '✅' },
-  { id: 'agenda', label: 'Agenda', icone: '📅' },
+const ABAS: { id: Aba; label: string}[] = [
+  { id: 'dashboard', label: 'Início'},
+  { id: 'fornecedores', label: 'Fornecedor'},
+  { id: 'financeiro', label: 'Finanças'},
+  { id: 'tarefas', label: 'Tarefas'},
+  { id: 'agenda', label: 'Agenda'},
 ];
 
 export function MainScreen({ usuario, evento, onVoltarEventos }: Props) {
@@ -44,7 +44,7 @@ export function MainScreen({ usuario, evento, onVoltarEventos }: Props) {
           <Text style={styles.btnVoltar}>← Eventos</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitulo} numberOfLines={1}>{evento.nome}</Text>
-        <Text style={styles.headerPerfil}>{usuario.perfil === 'familiar' ? '👨‍👩‍👧' : '🎪'}</Text>
+        <Text style={styles.headerPerfil}>{usuario.perfil === 'familiar'}</Text>
       </View>
 
       {/* Conteúdo da aba */}
