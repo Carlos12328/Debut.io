@@ -179,31 +179,28 @@ const aplicarMascaraCep = (valor: string): string => {
       </View>
 
       <TouchableOpacity
-          style={styles.button}
-          onPress={() => {
-          let dataBanco = '';
-          if (dataNascimento.length === 10) {
-
-          const [dd, mm, aaaa] = dataNascimento.split('/');
-          
-          dataBanco = `${aaaa}-${mm}-${dd}`;}
-
-          const cpfLimpo = cpf.replace(/\D/g, '');
-
-          const cepLimpo = cep.replace(/\D/g, '');
-
-          presenter.handleCadastro(
-          nome, email, senha, confirmarSenha, perfil,
-          cpfLimpo, dataBanco || dataNascimento,
-          logradouro, numero, bairro, cidade, estado, cepLimpo);
-        
-        disabled={loading}
-      >
-        {loading
-          ? <ActivityIndicator color="#fff" />
-          : <Text style={styles.buttonText}>Cadastrar</Text>
-        }
-      </TouchableOpacity>
+       style={styles.button}
+        onPress={() => {
+       let dataBanco = '';
+       if (dataNascimento.length === 10) {
+      const [dd, mm, aaaa] = dataNascimento.split('/');
+      dataBanco = `${aaaa}-${mm}-${dd}`;
+    }
+    const cpfLimpo = cpf.replace(/\D/g, '');
+    const cepLimpo = cep.replace(/\D/g, '');
+    presenter.handleCadastro(
+      nome, email, senha, confirmarSenha, perfil,
+      cpfLimpo, dataBanco || dataNascimento,
+      logradouro, numero, bairro, cidade, estado, cepLimpo
+    );
+  }}
+  disabled={loading}
+>
+  {loading
+    ? <ActivityIndicator color="#fff" />
+    : <Text style={styles.buttonText}>Cadastrar</Text>
+  }
+</TouchableOpacity>
 
       <TouchableOpacity onPress={onVoltarLogin} style={styles.linkContainer}>
         <Text style={styles.link}>Já tem conta? Entrar</Text>
