@@ -1,4 +1,5 @@
 import * as SQLite from 'expo-sqlite';
+import { Platform } from 'react-native';
 
 const DATABASE_NAME = 'debut_v4.db';
 let database: SQLite.SQLiteDatabase | null = null;
@@ -6,13 +7,13 @@ let database: SQLite.SQLiteDatabase | null = null;
 async function criarTabelas(db: SQLite.SQLiteDatabase) {
   db.runSync(`
   CREATE TABLE IF NOT EXISTS usuario (
-    id_usuario    INTEGER PRIMARY KEY AUTOINCREMENT,
-    nome          TEXT,
-    email         TEXT UNIQUE,
-    senha_hash    TEXT,
-    perfil        TEXT CHECK(perfil IN ('familiar', 'cerimonialista')),
-    cpf           TEXT UNIQUE,
-    data_nascimento DATE,
+    id_usuario          INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome                TEXT,
+    email               TEXT UNIQUE,
+    senha_hash          TEXT,
+    perfil              TEXT CHECK(perfil IN ('familiar', 'cerimonialista')),
+    cpf                 TEXT UNIQUE,
+    data_nascimento     DATE,
     endereco_logradouro TEXT,
     endereco_numero     TEXT,
     endereco_bairro     TEXT,
@@ -23,25 +24,25 @@ async function criarTabelas(db: SQLite.SQLiteDatabase) {
 `);
   db.runSync(`
     CREATE TABLE IF NOT EXISTS evento (
-      id_evento INTEGER PRIMARY KEY AUTOINCREMENT,
+      id_evento  INTEGER PRIMARY KEY AUTOINCREMENT,
       id_usuario INTEGER,
-      nome TEXT,
+      nome       TEXT,
       data_evento DATE,
-      orcamento REAL,
-      status TEXT CHECK(status IN ('ativo','encerrado')),
+      orcamento  REAL,
+      status     TEXT CHECK(status IN ('ativo','encerrado')),
       FOREIGN KEY(id_usuario) REFERENCES usuario(id_usuario)
     )
   `);
   db.runSync(`
   CREATE TABLE IF NOT EXISTS fornecedor (
-    id_fornecedor INTEGER PRIMARY KEY AUTOINCREMENT,
-    id_evento     INTEGER,
-    nome          TEXT,
-    tipo_servico  TEXT,
-    valor         REAL,
-    cnpj          TEXT,
-    telefone      TEXT,
-    email         TEXT,
+    id_fornecedor       INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_evento           INTEGER,
+    nome                TEXT,
+    tipo_servico        TEXT,
+    valor               REAL,
+    cnpj                TEXT,
+    telefone            TEXT,
+    email               TEXT,
     endereco_logradouro TEXT,
     endereco_numero     TEXT,
     endereco_bairro     TEXT,
@@ -53,11 +54,11 @@ async function criarTabelas(db: SQLite.SQLiteDatabase) {
 `);
   db.runSync(`
     CREATE TABLE IF NOT EXISTS pagamento (
-      id_pagamento INTEGER PRIMARY KEY AUTOINCREMENT,
+      id_pagamento  INTEGER PRIMARY KEY AUTOINCREMENT,
       id_fornecedor INTEGER,
-      valor REAL,
-      vencimento DATE,
-      status TEXT CHECK(status IN ('pendente','pago')),
+      valor         REAL,
+      vencimento    DATE,
+      status        TEXT CHECK(status IN ('pendente','pago')),
       FOREIGN KEY(id_fornecedor) REFERENCES fornecedor(id_fornecedor)
     )
   `);
@@ -66,15 +67,15 @@ async function criarTabelas(db: SQLite.SQLiteDatabase) {
       id_tarefa INTEGER PRIMARY KEY AUTOINCREMENT,
       id_evento INTEGER,
       descricao TEXT,
-      status TEXT CHECK(status IN ('pendente','concluida')),
+      status    TEXT CHECK(status IN ('pendente','concluida')),
       FOREIGN KEY(id_evento) REFERENCES evento(id_evento)
     )
   `);
   db.runSync(`
     CREATE TABLE IF NOT EXISTS compromisso (
-      id_compromisso INTEGER PRIMARY KEY AUTOINCREMENT,
-      id_evento INTEGER,
-      descricao TEXT,
+      id_compromisso   INTEGER PRIMARY KEY AUTOINCREMENT,
+      id_evento        INTEGER,
+      descricao        TEXT,
       data_compromisso DATE,
       FOREIGN KEY(id_evento) REFERENCES evento(id_evento)
     )
@@ -82,6 +83,14 @@ async function criarTabelas(db: SQLite.SQLiteDatabase) {
 }
 
 export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
+  // Web não suporta expo-sqlite (SharedArrayBuffer desabilitado por padrão)
+  if (Platform.OS === 'web') {
+    throw new Error(
+      'O banco de dados não é suportado na versão web. ' +
+      'Por favor, use o aplicativo no Android ou iOS.'
+    );
+  }
+
   if (!database) {
     database = SQLite.openDatabaseSync(DATABASE_NAME);
     await criarTabelas(database);
