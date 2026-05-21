@@ -21,6 +21,13 @@ export function EventoView({ presenter, onSelecionarEvento }: Props) {
 
   const hoje = new Date().toISOString().split('T')[0];
 
+  const aplicarMascaraData = (valor: string): string => {
+  const numeros = valor.replace(/\D/g, '').slice(0, 8);
+  if (numeros.length <= 2) return numeros;
+  if (numeros.length <= 4) return `${numeros.slice(0,2)}/${numeros.slice(2)}`;
+  return `${numeros.slice(0,2)}/${numeros.slice(2,4)}/${numeros.slice(4)}`;
+};
+
   useEffect(() => {
     const view: IEventoView = {
       showLoading: () => setLoading(true),
@@ -38,21 +45,25 @@ export function EventoView({ presenter, onSelecionarEvento }: Props) {
     return () => presenter.detachView();
   }, [presenter]);
 
-  const handleSalvar = () => {
-    if (!nome) {
-      Alert.alert('Erro', 'O nome do evento e obrigatorio.');
-      return;
-    }
-    if (!dataEvento) {
-      Alert.alert('Erro', 'A data do evento e obrigatoria.');
-      return;
-    }
-    if (dataEvento < hoje) {
-      Alert.alert('Erro', 'A data do evento nao pode ser uma data passada.');
-      return;
-    }
-    presenter.handleCadastrarEvento(nome, dataEvento, orcamento);
-  };
+    const handleSalvar = () => {
+  if (!nome) {
+    Alert.alert('Erro', 'O nome do evento e obrigatorio.');
+    return;
+  }
+  if (!dataEvento || dataEvento.length < 10) {
+    Alert.alert('Erro', 'Informe a data completa no formato DD/MM/AAAA.');
+    return;
+  }
+  const [dd, mm, aaaa] = dataEvento.split('/');
+  const dataBanco = `${aaaa}-${mm}-${dd}`;
+
+  if (dataBanco < hoje) {
+    Alert.alert('Erro', 'A data do evento nao pode ser uma data passada.');
+    return;
+  }
+
+  presenter.handleCadastrarEvento(nome, dataBanco, orcamento);
+};
 
   const renderEvento = ({ item }: { item: Evento }) => (
     <TouchableOpacity style={styles.card} onPress={() => onSelecionarEvento(item)}>
@@ -103,12 +114,12 @@ export function EventoView({ presenter, onSelecionarEvento }: Props) {
             />
             <Text style={styles.labelData}>Data minima: {hoje}</Text>
             <TextInput
-              style={styles.input}
-              placeholder="Data (AAAA-MM-DD) *"
-              value={dataEvento}
-              onChangeText={setDataEvento}
-              keyboardType="numeric"
-              maxLength={10}
+            style={styles.input}
+            placeholder="Data do evento (DD/MM/AAAA) *"
+            value={dataEvento}
+            onChangeText={(texto) => setDataEvento(aplicarMascaraData(texto))}
+            keyboardType="numeric"
+            maxLength={10}
             />
             <TextInput
               style={styles.input}

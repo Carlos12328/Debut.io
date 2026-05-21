@@ -39,6 +39,13 @@ export function CadastroView({ presenter, onCadastroSuccess, onVoltarLogin }: Pr
     return () => presenter.detachView();
   }, [presenter, onCadastroSuccess]);
 
+  const aplicarMascaraData = (valor: string): string => {
+  const numeros = valor.replace(/\D/g, '').slice(0, 8);
+  if (numeros.length <= 2) return numeros;
+  if (numeros.length <= 4) return `${numeros.slice(0,2)}/${numeros.slice(2)}`;
+  return `${numeros.slice(0,2)}/${numeros.slice(2,4)}/${numeros.slice(4)}`;
+};
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Debut.io</Text>
@@ -71,10 +78,11 @@ export function CadastroView({ presenter, onCadastroSuccess, onVoltarLogin }: Pr
       />
       <TextInput
         style={styles.input}
-        placeholder="Data de nascimento (AAAA-MM-DD)"
+        placeholder="Data de nascimento (DD/MM/AAAA)"
         value={dataNascimento}
-        onChangeText={setDataNascimento}
+        onChangeText={(texto) => setDataNascimento(aplicarMascaraData(texto))}
         keyboardType="numeric"
+        maxLength={10}
       />
       <TextInput
         style={styles.input}
@@ -157,12 +165,19 @@ export function CadastroView({ presenter, onCadastroSuccess, onVoltarLogin }: Pr
       </View>
 
       <TouchableOpacity
-        style={styles.button}
-        onPress={() => presenter.handleCadastro(
+          style={styles.button}
+          onPress={() => {
+          let dataBanco = '';
+          if (dataNascimento.length === 10) {
+          const [dd, mm, aaaa] = dataNascimento.split('/');
+          dataBanco = `${aaaa}-${mm}-${dd}`;}
+
+          presenter.handleCadastro(
           nome, email, senha, confirmarSenha, perfil,
-          cpf, dataNascimento,
-          logradouro, numero, bairro, cidade, estado, cep
-        )}
+          cpf, dataBanco || dataNascimento,
+          logradouro, numero, bairro, cidade, estado, cep);
+      }}
+
         disabled={loading}
       >
         {loading
