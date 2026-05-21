@@ -19,6 +19,8 @@ export function EventoView({ presenter, onSelecionarEvento }: Props) {
   const [dataEvento, setDataEvento] = useState('');
   const [orcamento, setOrcamento] = useState('');
 
+  const hoje = new Date().toISOString().split('T')[0];
+
   useEffect(() => {
     const view: IEventoView = {
       showLoading: () => setLoading(true),
@@ -36,11 +38,27 @@ export function EventoView({ presenter, onSelecionarEvento }: Props) {
     return () => presenter.detachView();
   }, [presenter]);
 
+  const handleSalvar = () => {
+    if (!nome) {
+      Alert.alert('Erro', 'O nome do evento e obrigatorio.');
+      return;
+    }
+    if (!dataEvento) {
+      Alert.alert('Erro', 'A data do evento e obrigatoria.');
+      return;
+    }
+    if (dataEvento < hoje) {
+      Alert.alert('Erro', 'A data do evento nao pode ser uma data passada.');
+      return;
+    }
+    presenter.handleCadastrarEvento(nome, dataEvento, orcamento);
+  };
+
   const renderEvento = ({ item }: { item: Evento }) => (
     <TouchableOpacity style={styles.card} onPress={() => onSelecionarEvento(item)}>
       <Text style={styles.cardTitulo}>{item.nome}</Text>
-      <Text style={styles.cardInfo}>📅 {item.data_evento}</Text>
-      <Text style={styles.cardInfo}>💰 R$ {item.orcamento.toFixed(2)}</Text>
+      <Text style={styles.cardInfo}>Data: {item.data_evento}</Text>
+      <Text style={styles.cardInfo}>Orcamento: R$ {item.orcamento.toFixed(2)}</Text>
       <View style={[styles.badge, item.status === 'ativo' ? styles.badgeAtivo : styles.badgeEncerrado]}>
         <Text style={styles.badgeText}>{item.status}</Text>
       </View>
@@ -61,7 +79,7 @@ export function EventoView({ presenter, onSelecionarEvento }: Props) {
       {!loading && eventos.length === 0 && (
         <View style={styles.vazio}>
           <Text style={styles.vazioText}>Nenhum evento cadastrado.</Text>
-          <Text style={styles.vazioSub}>Toque em "+ Novo" para começar.</Text>
+          <Text style={styles.vazioSub}>Toque em "+ Novo" para comecar.</Text>
         </View>
       )}
 
@@ -76,16 +94,41 @@ export function EventoView({ presenter, onSelecionarEvento }: Props) {
         <View style={styles.modalOverlay}>
           <ScrollView contentContainerStyle={styles.modalContent}>
             <Text style={styles.modalTitulo}>Novo Evento</Text>
-            <TextInput style={styles.input} placeholder="Nome do evento" value={nome} onChangeText={setNome} />
-            <TextInput style={styles.input} placeholder="Data (AAAA-MM-DD)" value={dataEvento} onChangeText={setDataEvento} />
-            <TextInput style={styles.input} placeholder="Orçamento (ex: 5000.00)" value={orcamento} onChangeText={setOrcamento} keyboardType="numeric" />
+
+            <TextInput
+              style={styles.input}
+              placeholder="Nome do evento *"
+              value={nome}
+              onChangeText={setNome}
+            />
+            <Text style={styles.labelData}>Data minima: {hoje}</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Data (AAAA-MM-DD) *"
+              value={dataEvento}
+              onChangeText={setDataEvento}
+              keyboardType="numeric"
+              maxLength={10}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Orcamento (ex: 5000.00)"
+              value={orcamento}
+              onChangeText={setOrcamento}
+              keyboardType="numeric"
+            />
+
             <TouchableOpacity
               style={styles.btnSalvar}
-              onPress={() => presenter.handleCadastrarEvento(nome, dataEvento, orcamento)}
+              onPress={handleSalvar}
               disabled={loading}
             >
-              {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnSalvarText}>Salvar</Text>}
+              {loading
+                ? <ActivityIndicator color="#fff" />
+                : <Text style={styles.btnSalvarText}>Salvar</Text>
+              }
             </TouchableOpacity>
+
             <TouchableOpacity style={styles.btnCancelar} onPress={() => setModalVisivel(false)}>
               <Text style={styles.btnCancelarText}>Cancelar</Text>
             </TouchableOpacity>
@@ -114,9 +157,10 @@ const styles = StyleSheet.create({
   vazioSub: { fontSize: 13, color: '#bbb', marginTop: 4 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalContent: { backgroundColor: '#fff', padding: 24, borderTopLeftRadius: 20, borderTopRightRadius: 20 },
-  modalTitulo: { fontSize: 18, fontWeight: 'bold', color: '#9b59b6', marginBottom: 20 },
+  modalTitulo: { fontSize: 18, fontWeight: 'bold', color: '#9b59b6', marginBottom: 16 },
+  labelData: { fontSize: 12, color: '#888', marginBottom: 6, marginTop: -8 },
   input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 16 },
-  btnSalvar: { backgroundColor: '#9b59b6', padding: 14, borderRadius: 8, alignItems: 'center', marginBottom: 10 },
+  btnSalvar: { backgroundColor: '#9b59b6', padding: 14, borderRadius: 8, alignItems: 'center', marginBottom: 10, marginTop: 8 },
   btnSalvarText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   btnCancelar: { padding: 14, alignItems: 'center' },
   btnCancelarText: { color: '#888', fontSize: 16 },
