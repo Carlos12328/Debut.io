@@ -5,7 +5,7 @@ import { getDatabase } from '../db';
 export class UsuarioSQLiteRepository implements UsuarioRepository {
   async getByEmail(email: string): Promise<Usuario | null> {
     const db = await getDatabase();
-    const result = db.getFirstSync<Usuario>(
+    const result = await db.getFirstAsync<Usuario>(
       'SELECT * FROM usuario WHERE email = ?',
       [email]
     );
@@ -14,7 +14,7 @@ export class UsuarioSQLiteRepository implements UsuarioRepository {
 
   async getById(id: EntityId): Promise<Usuario | null> {
     const db = await getDatabase();
-    const result = db.getFirstSync<Usuario>(
+    const result = await db.getFirstAsync<Usuario>(
       'SELECT * FROM usuario WHERE id_usuario = ?',
       [id]
     );
@@ -23,12 +23,12 @@ export class UsuarioSQLiteRepository implements UsuarioRepository {
 
   async list(): Promise<Usuario[]> {
     const db = await getDatabase();
-    return db.getAllSync<Usuario>('SELECT * FROM usuario');
+    return db.getAllAsync<Usuario>('SELECT * FROM usuario');
   }
 
   async create(data: Usuario): Promise<Usuario> {
     const db = await getDatabase();
-    db.runSync(
+    await db.runAsync(
       `INSERT INTO usuario 
         (nome, email, senha_hash, perfil, cpf, data_nascimento,
          endereco_logradouro, endereco_numero, endereco_bairro,
@@ -57,12 +57,12 @@ export class UsuarioSQLiteRepository implements UsuarioRepository {
     const db = await getDatabase();
     const campos = Object.keys(data).map((k) => `${k} = ?`).join(', ');
     const valores = [...Object.values(data), id];
-    db.runSync(`UPDATE usuario SET ${campos} WHERE id_usuario = ?`, valores);
+    await db.runAsync(`UPDATE usuario SET ${campos} WHERE id_usuario = ?`, valores);
     return (await this.getById(id))!;
   }
 
   async remove(id: EntityId): Promise<void> {
     const db = await getDatabase();
-    db.runSync('DELETE FROM usuario WHERE id_usuario = ?', [id]);
+    await db.runAsync('DELETE FROM usuario WHERE id_usuario = ?', [id]);
   }
 }

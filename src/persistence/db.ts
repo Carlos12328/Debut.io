@@ -1,11 +1,10 @@
 import * as SQLite from 'expo-sqlite';
-import { Platform } from 'react-native';
 
 const DATABASE_NAME = 'debut_v4.db';
 let database: SQLite.SQLiteDatabase | null = null;
 
 async function criarTabelas(db: SQLite.SQLiteDatabase) {
-  db.runSync(`
+  await db.execAsync(`
     CREATE TABLE IF NOT EXISTS usuario (
       id_usuario          INTEGER PRIMARY KEY AUTOINCREMENT,
       nome                TEXT,
@@ -20,9 +19,7 @@ async function criarTabelas(db: SQLite.SQLiteDatabase) {
       endereco_cidade     TEXT,
       endereco_estado     TEXT,
       endereco_cep        TEXT
-    )
-  `);
-  db.runSync(`
+    );
     CREATE TABLE IF NOT EXISTS evento (
       id_evento   INTEGER PRIMARY KEY AUTOINCREMENT,
       id_usuario  INTEGER,
@@ -31,9 +28,7 @@ async function criarTabelas(db: SQLite.SQLiteDatabase) {
       orcamento   REAL,
       status      TEXT CHECK(status IN ('ativo','encerrado')),
       FOREIGN KEY(id_usuario) REFERENCES usuario(id_usuario)
-    )
-  `);
-  db.runSync(`
+    );
     CREATE TABLE IF NOT EXISTS fornecedor (
       id_fornecedor       INTEGER PRIMARY KEY AUTOINCREMENT,
       id_evento           INTEGER,
@@ -50,9 +45,7 @@ async function criarTabelas(db: SQLite.SQLiteDatabase) {
       endereco_estado     TEXT,
       endereco_cep        TEXT,
       FOREIGN KEY(id_evento) REFERENCES evento(id_evento)
-    )
-  `);
-  db.runSync(`
+    );
     CREATE TABLE IF NOT EXISTS pagamento (
       id_pagamento  INTEGER PRIMARY KEY AUTOINCREMENT,
       id_fornecedor INTEGER,
@@ -60,38 +53,27 @@ async function criarTabelas(db: SQLite.SQLiteDatabase) {
       vencimento    DATE,
       status        TEXT CHECK(status IN ('pendente','pago')),
       FOREIGN KEY(id_fornecedor) REFERENCES fornecedor(id_fornecedor)
-    )
-  `);
-  db.runSync(`
+    );
     CREATE TABLE IF NOT EXISTS tarefa (
       id_tarefa INTEGER PRIMARY KEY AUTOINCREMENT,
       id_evento INTEGER,
       descricao TEXT,
       status    TEXT CHECK(status IN ('pendente','concluida')),
       FOREIGN KEY(id_evento) REFERENCES evento(id_evento)
-    )
-  `);
-  db.runSync(`
+    );
     CREATE TABLE IF NOT EXISTS compromisso (
       id_compromisso   INTEGER PRIMARY KEY AUTOINCREMENT,
       id_evento        INTEGER,
       descricao        TEXT,
       data_compromisso DATE,
       FOREIGN KEY(id_evento) REFERENCES evento(id_evento)
-    )
+    );
   `);
 }
 
 export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
   if (!database) {
-    database = SQLite.openDatabaseSync(DATABASE_NAME, {
-      enableChangeListener: false,
-    });
-
-    if (Platform.OS === 'web') {
-      await new Promise(resolve => setTimeout(resolve, 800));
-    }
-
+    database = await SQLite.openDatabaseAsync(DATABASE_NAME);
     await criarTabelas(database);
   }
   return database;

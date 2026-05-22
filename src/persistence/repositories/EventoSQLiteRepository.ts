@@ -5,7 +5,7 @@ import { getDatabase } from '../db';
 export class EventoSQLiteRepository implements EventoRepository {
   async getByUsuario(id_usuario: EntityId): Promise<Evento[]> {
     const db = await getDatabase();
-    return db.getAllSync<Evento>(
+    return db.getAllAsync<Evento>(
       'SELECT * FROM evento WHERE id_usuario = ?',
       [id_usuario]
     );
@@ -13,7 +13,7 @@ export class EventoSQLiteRepository implements EventoRepository {
 
   async getById(id: EntityId): Promise<Evento | null> {
     const db = await getDatabase();
-    const result = db.getFirstSync<Evento>(
+    const result = await db.getFirstAsync<Evento>(
       'SELECT * FROM evento WHERE id_evento = ?',
       [id]
     );
@@ -22,12 +22,12 @@ export class EventoSQLiteRepository implements EventoRepository {
 
   async list(): Promise<Evento[]> {
     const db = await getDatabase();
-    return db.getAllSync<Evento>('SELECT * FROM evento');
+    return db.getAllAsync<Evento>('SELECT * FROM evento');
   }
 
   async create(data: Evento): Promise<Evento> {
     const db = await getDatabase();
-    db.runSync(
+    await db.runAsync(
       'INSERT INTO evento (id_usuario, nome, data_evento, orcamento, status) VALUES (?, ?, ?, ?, ?)',
       [data.id_usuario, data.nome, data.data_evento, data.orcamento, data.status]
     );
@@ -39,12 +39,12 @@ export class EventoSQLiteRepository implements EventoRepository {
     const db = await getDatabase();
     const campos = Object.keys(data).map((k) => `${k} = ?`).join(', ');
     const valores = [...Object.values(data), id];
-    db.runSync(`UPDATE evento SET ${campos} WHERE id_evento = ?`, valores);
+    await db.runAsync(`UPDATE evento SET ${campos} WHERE id_evento = ?`, valores);
     return (await this.getById(id))!;
   }
 
   async remove(id: EntityId): Promise<void> {
     const db = await getDatabase();
-    db.runSync('DELETE FROM evento WHERE id_evento = ?', [id]);
+    await db.runAsync('DELETE FROM evento WHERE id_evento = ?', [id]);
   }
 }

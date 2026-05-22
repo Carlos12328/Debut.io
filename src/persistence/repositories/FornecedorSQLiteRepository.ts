@@ -5,7 +5,7 @@ import { getDatabase } from '../db';
 export class FornecedorSQLiteRepository implements FornecedorRepository {
   async getByEvento(id_evento: EntityId): Promise<Fornecedor[]> {
     const db = await getDatabase();
-    return db.getAllSync<Fornecedor>(
+    return db.getAllAsync<Fornecedor>(
       'SELECT * FROM fornecedor WHERE id_evento = ?',
       [id_evento]
     );
@@ -13,7 +13,7 @@ export class FornecedorSQLiteRepository implements FornecedorRepository {
 
   async getById(id: EntityId): Promise<Fornecedor | null> {
     const db = await getDatabase();
-    const result = db.getFirstSync<Fornecedor>(
+    const result = await db.getFirstAsync<Fornecedor>(
       'SELECT * FROM fornecedor WHERE id_fornecedor = ?',
       [id]
     );
@@ -22,12 +22,12 @@ export class FornecedorSQLiteRepository implements FornecedorRepository {
 
   async list(): Promise<Fornecedor[]> {
     const db = await getDatabase();
-    return db.getAllSync<Fornecedor>('SELECT * FROM fornecedor');
+    return db.getAllAsync<Fornecedor>('SELECT * FROM fornecedor');
   }
 
   async create(data: Fornecedor): Promise<Fornecedor> {
     const db = await getDatabase();
-    db.runSync(
+    await db.runAsync(
       `INSERT INTO fornecedor
         (id_evento, nome, tipo_servico, valor, cnpj, telefone, email,
          endereco_logradouro, endereco_numero, endereco_bairro,
@@ -52,16 +52,20 @@ export class FornecedorSQLiteRepository implements FornecedorRepository {
     const lista = await this.getByEvento(data.id_evento);
     return lista[lista.length - 1];
   }
+
   async update(id: EntityId, data: Partial<Fornecedor>): Promise<Fornecedor> {
     const db = await getDatabase();
     const campos = Object.keys(data).map((k) => `${k} = ?`).join(', ');
     const valores = [...Object.values(data), id];
-    db.runSync(`UPDATE fornecedor SET ${campos} WHERE id_fornecedor = ?`, valores);
+    await db.runAsync(
+      `UPDATE fornecedor SET ${campos} WHERE id_fornecedor = ?`,
+      valores
+    );
     return (await this.getById(id))!;
   }
 
   async remove(id: EntityId): Promise<void> {
     const db = await getDatabase();
-    db.runSync('DELETE FROM fornecedor WHERE id_fornecedor = ?', [id]);
+    await db.runAsync('DELETE FROM fornecedor WHERE id_fornecedor = ?', [id]);
   }
 }
