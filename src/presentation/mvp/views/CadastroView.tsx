@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View, Text, TextInput, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Alert, ScrollView,
-} from 'react-native';
+import {View, Text, TextInput, TouchableOpacity,StyleSheet, ActivityIndicator, Alert, ScrollView,} from 'react-native';
 import { CadastroPresenter, CadastroView as ICadastroView } from '../presenters/CadastroPresenter';
 import { Usuario, PerfilUsuario } from '../../../domain/models';
 

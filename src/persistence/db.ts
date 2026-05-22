@@ -1,4 +1,5 @@
 import * as SQLite from 'expo-sqlite';
+import { Platform } from 'react-native';
 
 const DATABASE_NAME = 'debut_v4.db';
 let database: SQLite.SQLiteDatabase | null = null;
@@ -83,7 +84,14 @@ async function criarTabelas(db: SQLite.SQLiteDatabase) {
 
 export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
   if (!database) {
-    database = SQLite.openDatabaseSync(DATABASE_NAME);
+    database = SQLite.openDatabaseSync(DATABASE_NAME, {
+      enableChangeListener: false,
+    });
+
+    if (Platform.OS === 'web') {
+      await new Promise(resolve => setTimeout(resolve, 800));
+    }
+
     await criarTabelas(database);
   }
   return database;
