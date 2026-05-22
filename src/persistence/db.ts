@@ -1,57 +1,56 @@
 import * as SQLite from 'expo-sqlite';
-import { Platform } from 'react-native';
 
 const DATABASE_NAME = 'debut_v4.db';
 let database: SQLite.SQLiteDatabase | null = null;
 
 async function criarTabelas(db: SQLite.SQLiteDatabase) {
   db.runSync(`
-  CREATE TABLE IF NOT EXISTS usuario (
-    id_usuario          INTEGER PRIMARY KEY AUTOINCREMENT,
-    nome                TEXT,
-    email               TEXT UNIQUE,
-    senha_hash          TEXT,
-    perfil              TEXT CHECK(perfil IN ('familiar', 'cerimonialista')),
-    cpf                 TEXT UNIQUE,
-    data_nascimento     DATE,
-    endereco_logradouro TEXT,
-    endereco_numero     TEXT,
-    endereco_bairro     TEXT,
-    endereco_cidade     TEXT,
-    endereco_estado     TEXT,
-    endereco_cep        TEXT
-  )
-`);
+    CREATE TABLE IF NOT EXISTS usuario (
+      id_usuario          INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome                TEXT,
+      email               TEXT UNIQUE,
+      senha_hash          TEXT,
+      perfil              TEXT CHECK(perfil IN ('familiar', 'cerimonialista')),
+      cpf                 TEXT UNIQUE,
+      data_nascimento     DATE,
+      endereco_logradouro TEXT,
+      endereco_numero     TEXT,
+      endereco_bairro     TEXT,
+      endereco_cidade     TEXT,
+      endereco_estado     TEXT,
+      endereco_cep        TEXT
+    )
+  `);
   db.runSync(`
     CREATE TABLE IF NOT EXISTS evento (
-      id_evento  INTEGER PRIMARY KEY AUTOINCREMENT,
-      id_usuario INTEGER,
-      nome       TEXT,
+      id_evento   INTEGER PRIMARY KEY AUTOINCREMENT,
+      id_usuario  INTEGER,
+      nome        TEXT,
       data_evento DATE,
-      orcamento  REAL,
-      status     TEXT CHECK(status IN ('ativo','encerrado')),
+      orcamento   REAL,
+      status      TEXT CHECK(status IN ('ativo','encerrado')),
       FOREIGN KEY(id_usuario) REFERENCES usuario(id_usuario)
     )
   `);
   db.runSync(`
-  CREATE TABLE IF NOT EXISTS fornecedor (
-    id_fornecedor       INTEGER PRIMARY KEY AUTOINCREMENT,
-    id_evento           INTEGER,
-    nome                TEXT,
-    tipo_servico        TEXT,
-    valor               REAL,
-    cnpj                TEXT,
-    telefone            TEXT,
-    email               TEXT,
-    endereco_logradouro TEXT,
-    endereco_numero     TEXT,
-    endereco_bairro     TEXT,
-    endereco_cidade     TEXT,
-    endereco_estado     TEXT,
-    endereco_cep        TEXT,
-    FOREIGN KEY(id_evento) REFERENCES evento(id_evento)
-  )
-`);
+    CREATE TABLE IF NOT EXISTS fornecedor (
+      id_fornecedor       INTEGER PRIMARY KEY AUTOINCREMENT,
+      id_evento           INTEGER,
+      nome                TEXT,
+      tipo_servico        TEXT,
+      valor               REAL,
+      cnpj                TEXT,
+      telefone            TEXT,
+      email               TEXT,
+      endereco_logradouro TEXT,
+      endereco_numero     TEXT,
+      endereco_bairro     TEXT,
+      endereco_cidade     TEXT,
+      endereco_estado     TEXT,
+      endereco_cep        TEXT,
+      FOREIGN KEY(id_evento) REFERENCES evento(id_evento)
+    )
+  `);
   db.runSync(`
     CREATE TABLE IF NOT EXISTS pagamento (
       id_pagamento  INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -83,14 +82,6 @@ async function criarTabelas(db: SQLite.SQLiteDatabase) {
 }
 
 export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
-  // Web não suporta expo-sqlite (SharedArrayBuffer desabilitado por padrão)
-  if (Platform.OS === 'web') {
-    throw new Error(
-      'O banco de dados não é suportado na versão web. ' +
-      'Por favor, use o aplicativo no Android ou iOS.'
-    );
-  }
-
   if (!database) {
     database = SQLite.openDatabaseSync(DATABASE_NAME);
     await criarTabelas(database);
