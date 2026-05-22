@@ -18,16 +18,71 @@ export function EventoView({ presenter, onSelecionarEvento }: Props) {
   const [nome, setNome] = useState('');
   const [dataEvento, setDataEvento] = useState('');
   const [orcamento, setOrcamento] = useState('');
+  const [erroData, setErroData] = useState('');
 
-  const hoje = new Date().toISOString().split('T')[0];
+  // Data de hoje em DD/MM/AAAA para exibir ao usuário
+  const hojeObj = new Date();
+  const hojeExibicao = `${String(hojeObj.getDate()).padStart(2, '0')}/${String(hojeObj.getMonth() + 1).padStart(2, '0')}/${hojeObj.getFullYear()}`;
+  // Data de hoje em AAAA-MM-DD para comparar com o banco
+  const hojeBanco = hojeObj.toISOString().split('T')[0];
 
   const aplicarMascaraData = (valor: string): string => {
-  const numeros = valor.replace(/\D/g, '').slice(0, 8);
-  if (numeros.length <= 2) return numeros;
-  if (numeros.length <= 4) return `${numeros.slice(0,2)}/${numeros.slice(2)}`;
-  return `${numeros.slice(0,2)}/${numeros.slice(2,4)}/${numeros.slice(4)}`;
+    const numeros = valor.replace(/\D/g, '').slice(0, 8);
+    if (numeros.length <= 2) return numeros;
+    if (numeros.length <= 4) return `${numeros.slice(0, 2)}/${numeros.slice(2)}`;
+    return `${numeros.slice(0, 2)}/${numeros.slice(2, 4)}/${numeros.slice(4)}`;
+  };
+
+  // Converte DD/MM/AAAA exibido → AAAA-MM-DD para banco
+  const converterParaBanco = (data: string): string => {
+    const [dd, mm, aaaa] = data.split('/');
+    return `${aaaa}-${mm}-${dd}`;
+  };
+
+  // Converte AAAA-MM-DD do banco → DD/MM/AAAA para exibir
+  const converterParaExibicao = (data: string): string => {
+    if (!data || !data.includes('-')) return data;
+    const [aaaa, mm, dd] = data.split('-');
+    return `${dd}/${mm}/${aaaa}`;
+  };
+
+const validarDataEvento = (data: string): string => {
+  if (data.length < 10) return '';
+
+  const [ddStr, mmStr, aaaaStr] = data.split('/');
+  const dd = parseInt(ddStr, 10);
+  const mm = parseInt(mmStr, 10);
+  const aaaa = parseInt(aaaaStr, 10);
+
+  if (mm < 1 || mm > 12) return 'Mes invalido. Use um valor entre 01 e 12.';
+
+  const diasNoMes = new Date(aaaa, mm, 0).getDate();
+  if (dd < 1 || dd > diasNoMes) return `Dia invalido. O mes informado tem no maximo ${diasNoMes} dias.`;
+
+  if (aaaaStr.length !== 4) return 'Ano invalido.';
+
+  const dataBanco = converterParaBanco(data);
+
+  // Nao pode ser data passada
+  if (dataBanco < hojeBanco) return 'A data do evento nao pode ser uma data passada.';
+
+  // Maximo 15 anos no futuro
+  const anoMaximo = hojeObj.getFullYear() + 15;
+  if (aaaa > anoMaximo) return `O ano maximo permitido e ${anoMaximo}.`;
+
+  return '';
 };
 
+  const handleChangeDataEvento = (texto: string) => {
+  const formatado = aplicarMascaraData(texto);
+  setDataEvento(formatado);
+  if (formatado.length === 10) {
+    setErroData(validarDataEvento(formatado));
+  } else {
+    setErroData('');
+  }
+};
+  
   useEffect(() => {
     const view: IEventoView = {
       showLoading: () => setLoading(true),
@@ -45,30 +100,50 @@ export function EventoView({ presenter, onSelecionarEvento }: Props) {
     return () => presenter.detachView();
   }, [presenter]);
 
-    const handleSalvar = () => {
-  if (!nome) {
-    Alert.alert('Erro', 'O nome do evento e obrigatorio.');
-    return;
-  }
-  if (!dataEvento || dataEvento.length < 10) {
-    Alert.alert('Erro', 'Informe a data completa no formato DD/MM/AAAA.');
-    return;
-  }
-  const [dd, mm, aaaa] = dataEvento.split('/');
-  const dataBanco = `${aaaa}-${mm}-${dd}`;
+  const handleSalvar = () => {
+    if (!nome) {
+      Alert.alert('Erro', 'O nome do evento e obrigatorio.');
+      return;
+    }
+    if (!dataEvento || dataEvento.length < 10) {
+      Alert.alert('Erro', 'Informe a data completa no formato DD/MM/AAAA.');
+      return;
+    }
 
-  if (dataBanco < hoje) {
-    Alert.alert('Erro', 'A data do evento nao pode ser uma data passada.');
-    return;
-  }
+    // Valida dia e mês
+    const [ddStr, mmStr, aaaaStr] = dataEvento.split('/');
+    const dd = parseInt(ddStr, 10);
+    const mm = parseInt(mmStr, 10);
+    const aaaa = parseInt(aaaaStr, 10);
 
-  presenter.handleCadastrarEvento(nome, dataBanco, orcamento);
-};
+    if (mm < 1 || mm > 12) {
+      Alert.alert('Erro', 'Mes invalido. Use um valor entre 01 e 12.');
+      return;
+    }
+    const diasNoMes = new Date(aaaa, mm, 0).getDate();
+    if (dd < 1 || dd > diasNoMes) {
+      Alert.alert('Erro', `Dia invalido. O mes informado tem no maximo ${diasNoMes} dias.`);
+      return;
+    }
+
+    const dataBanco = converterParaBanco(dataEvento);
+    if (dataBanco < hojeBanco) {
+      Alert.alert('Erro', 'A data do evento nao pode ser uma data passada.');
+      return;
+    }
+
+    if (!orcamento || parseFloat(orcamento.replace(',', '.')) <= 0) {
+      Alert.alert('Erro', 'Informe um orcamento valido.');
+      return;
+    }
+
+    presenter.handleCadastrarEvento(nome, dataBanco, orcamento);
+  };
 
   const renderEvento = ({ item }: { item: Evento }) => (
     <TouchableOpacity style={styles.card} onPress={() => onSelecionarEvento(item)}>
       <Text style={styles.cardTitulo}>{item.nome}</Text>
-      <Text style={styles.cardInfo}>Data: {item.data_evento}</Text>
+      <Text style={styles.cardInfo}>Data: {converterParaExibicao(item.data_evento)}</Text>
       <Text style={styles.cardInfo}>Orcamento: R$ {item.orcamento.toFixed(2)}</Text>
       <View style={[styles.badge, item.status === 'ativo' ? styles.badgeAtivo : styles.badgeEncerrado]}>
         <Text style={styles.badgeText}>{item.status}</Text>
@@ -111,22 +186,30 @@ export function EventoView({ presenter, onSelecionarEvento }: Props) {
               placeholder="Nome do evento *"
               value={nome}
               onChangeText={setNome}
+              maxLength={80}
             />
-            <Text style={styles.labelData}>Data minima: {hoje}</Text>
-            <TextInput
-            style={styles.input}
+            <Text style={styles.labelData}>
+              Data minima: {hojeExibicao}
+          </Text>
+          <TextInput
+            style={[styles.input, erroData ? styles.inputErro : null]}
             placeholder="Data do evento (DD/MM/AAAA) *"
             value={dataEvento}
-            onChangeText={(texto) => setDataEvento(aplicarMascaraData(texto))}
+            onChangeText={handleChangeDataEvento}
             keyboardType="numeric"
             maxLength={10}
-            />
+/>
+{erroData ? (
+  <Text style={styles.textoErro}>{erroData}</Text>
+) : null}
+
             <TextInput
               style={styles.input}
               placeholder="Orcamento (ex: 5000.00)"
               value={orcamento}
               onChangeText={setOrcamento}
               keyboardType="numeric"
+              maxLength={12}
             />
 
             <TouchableOpacity
@@ -175,4 +258,6 @@ const styles = StyleSheet.create({
   btnSalvarText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   btnCancelar: { padding: 14, alignItems: 'center' },
   btnCancelarText: { color: '#888', fontSize: 16 },
+  inputErro: { borderColor: '#e74c3c' },
+  textoErro: { fontSize: 12, color: '#e74c3c', marginBottom: 12, marginTop: -12, fontStyle: 'italic' }, 
 });
