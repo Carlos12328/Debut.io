@@ -20,10 +20,8 @@ export function EventoView({ presenter, onSelecionarEvento }: Props) {
   const [orcamento, setOrcamento] = useState('');
   const [erroData, setErroData] = useState('');
 
-  // Data de hoje em DD/MM/AAAA para exibir ao usuário
   const hojeObj = new Date();
   const hojeExibicao = `${String(hojeObj.getDate()).padStart(2, '0')}/${String(hojeObj.getMonth() + 1).padStart(2, '0')}/${hojeObj.getFullYear()}`;
-  // Data de hoje em AAAA-MM-DD para comparar com o banco
   const hojeBanco = hojeObj.toISOString().split('T')[0];
 
   const aplicarMascaraData = (valor: string): string => {
@@ -33,72 +31,60 @@ export function EventoView({ presenter, onSelecionarEvento }: Props) {
     return `${numeros.slice(0, 2)}/${numeros.slice(2, 4)}/${numeros.slice(4)}`;
   };
 
-  // Converte DD/MM/AAAA exibido → AAAA-MM-DD para banco
+  const aplicarMascaraOrcamento = (valor: string): string => {
+    const n = valor.replace(/\D/g, '').slice(0, 9);
+    if (!n) return '';
+    const inteiro = parseInt(n, 10);
+    return (inteiro / 100)
+      .toFixed(2)
+      .replace('.', ',')
+      .replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  };
+
   const converterParaBanco = (data: string): string => {
     const [dd, mm, aaaa] = data.split('/');
     return `${aaaa}-${mm}-${dd}`;
   };
 
-  // Converte AAAA-MM-DD do banco → DD/MM/AAAA para exibir
   const converterParaExibicao = (data: string): string => {
     if (!data || !data.includes('-')) return data;
     const [aaaa, mm, dd] = data.split('-');
     return `${dd}/${mm}/${aaaa}`;
   };
 
-const validarDataEvento = (data: string): string => {
-  if (data.length < 10) return '';
+  const validarDataEvento = (data: string): string => {
+    if (data.length < 10) return '';
 
-  const [ddStr, mmStr, aaaaStr] = data.split('/');
-  const dd = parseInt(ddStr, 10);
-  const mm = parseInt(mmStr, 10);
-  const aaaa = parseInt(aaaaStr, 10);
+    const [ddStr, mmStr, aaaaStr] = data.split('/');
+    const dd = parseInt(ddStr, 10);
+    const mm = parseInt(mmStr, 10);
+    const aaaa = parseInt(aaaaStr, 10);
 
-  if (mm < 1 || mm > 12) return 'Mes invalido. Use um valor entre 01 e 12.';
+    if (mm < 1 || mm > 12) return 'Mes invalido. Use um valor entre 01 e 12.';
 
-  const diasNoMes = new Date(aaaa, mm, 0).getDate();
-  if (dd < 1 || dd > diasNoMes) return `Dia invalido. O mes informado tem no maximo ${diasNoMes} dias.`;
+    const diasNoMes = new Date(aaaa, mm, 0).getDate();
+    if (dd < 1 || dd > diasNoMes) return `Dia invalido. O mes informado tem no maximo ${diasNoMes} dias.`;
 
-  if (aaaaStr.length !== 4) return 'Ano invalido.';
+    if (aaaaStr.length !== 4) return 'Ano invalido.';
 
-  const dataBanco = converterParaBanco(data);
+    const dataBanco = converterParaBanco(data);
+    if (dataBanco < hojeBanco) return 'A data do evento nao pode ser uma data passada.';
 
-  // Nao pode ser data passada
-  if (dataBanco < hojeBanco) return 'A data do evento nao pode ser uma data passada.';
+    const anoMaximo = hojeObj.getFullYear() + 15;
+    if (aaaa > anoMaximo) return `O ano maximo permitido e ${anoMaximo}.`;
 
-  // Maximo 15 anos no futuro
-  const anoMaximo = hojeObj.getFullYear() + 15;
-  if (aaaa > anoMaximo) return `O ano maximo permitido e ${anoMaximo}.`;
-
-  return '';
-};
+    return '';
+  };
 
   const handleChangeDataEvento = (texto: string) => {
-  const formatado = aplicarMascaraData(texto);
-  setDataEvento(formatado);
-  if (formatado.length === 10) {
-    setErroData(validarDataEvento(formatado));
-  } else {
-    setErroData('');
-  }
-};
-  
-  useEffect(() => {
-    const view: IEventoView = {
-      showLoading: () => setLoading(true),
-      hideLoading: () => setLoading(false),
-      showError: (msg) => Alert.alert('Erro', msg),
-      onEventosCargados: (lista) => setEventos(lista),
-      onEventoCadastrado: (evento) => {
-        setEventos(prev => [...prev, evento]);
-        setModalVisivel(false);
-        setNome(''); setDataEvento(''); setOrcamento('');
-      },
-    };
-    presenter.attachView(view);
-    presenter.carregarEventos();
-    return () => presenter.detachView();
-  }, [presenter]);
+    const formatado = aplicarMascaraData(texto);
+    setDataEvento(formatado);
+    if (formatado.length === 10) {
+      setErroData(validarDataEvento(formatado));
+    } else {
+      setErroData('');
+    }
+  };
 
   const handleSalvar = () => {
     if (!nome) {
@@ -109,42 +95,47 @@ const validarDataEvento = (data: string): string => {
       Alert.alert('Erro', 'Informe a data completa no formato DD/MM/AAAA.');
       return;
     }
-
-    // Valida dia e mês
-    const [ddStr, mmStr, aaaaStr] = dataEvento.split('/');
-    const dd = parseInt(ddStr, 10);
-    const mm = parseInt(mmStr, 10);
-    const aaaa = parseInt(aaaaStr, 10);
-
-    if (mm < 1 || mm > 12) {
-      Alert.alert('Erro', 'Mes invalido. Use um valor entre 01 e 12.');
+    const erroDataFinal = validarDataEvento(dataEvento);
+    if (erroDataFinal) {
+      Alert.alert('Data invalida', erroDataFinal);
       return;
     }
-    const diasNoMes = new Date(aaaa, mm, 0).getDate();
-    if (dd < 1 || dd > diasNoMes) {
-      Alert.alert('Erro', `Dia invalido. O mes informado tem no maximo ${diasNoMes} dias.`);
-      return;
-    }
-
-    const dataBanco = converterParaBanco(dataEvento);
-    if (dataBanco < hojeBanco) {
-      Alert.alert('Erro', 'A data do evento nao pode ser uma data passada.');
-      return;
-    }
-
-    if (!orcamento || parseFloat(orcamento.replace(',', '.')) <= 0) {
+    const orcamentoLimpo = orcamento.replace(/\./g, '').replace(',', '.');
+    if (!orcamento || parseFloat(orcamentoLimpo) <= 0) {
       Alert.alert('Erro', 'Informe um orcamento valido.');
       return;
     }
-
-    presenter.handleCadastrarEvento(nome, dataBanco, orcamento);
+    const dataBanco = converterParaBanco(dataEvento);
+    presenter.handleCadastrarEvento(nome, dataBanco, orcamentoLimpo);
   };
+
+  useEffect(() => {
+    const view: IEventoView = {
+      showLoading: () => setLoading(true),
+      hideLoading: () => setLoading(false),
+      showError: (msg) => Alert.alert('Erro', msg),
+      onEventosCargados: (lista) => setEventos(lista),
+      onEventoCadastrado: (evento) => {
+        setEventos(prev => [...prev, evento]);
+        setModalVisivel(false);
+        setNome(''); setDataEvento(''); setOrcamento(''); setErroData('');
+      },
+    };
+    presenter.attachView(view);
+    presenter.carregarEventos();
+    return () => presenter.detachView();
+  }, [presenter]);
 
   const renderEvento = ({ item }: { item: Evento }) => (
     <TouchableOpacity style={styles.card} onPress={() => onSelecionarEvento(item)}>
       <Text style={styles.cardTitulo}>{item.nome}</Text>
       <Text style={styles.cardInfo}>Data: {converterParaExibicao(item.data_evento)}</Text>
-      <Text style={styles.cardInfo}>Orcamento: R$ {item.orcamento.toFixed(2)}</Text>
+      <Text style={styles.cardInfo}>
+        Orcamento: R$ {Number(item.orcamento)
+          .toFixed(2)
+          .replace('.', ',')
+          .replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+      </Text>
       <View style={[styles.badge, item.status === 'ativo' ? styles.badgeAtivo : styles.badgeEncerrado]}>
         <Text style={styles.badgeText}>{item.status}</Text>
       </View>
@@ -188,26 +179,25 @@ const validarDataEvento = (data: string): string => {
               onChangeText={setNome}
               maxLength={80}
             />
-            <Text style={styles.labelData}>
-              Data minima: {hojeExibicao}
-          </Text>
-          <TextInput
-            style={[styles.input, erroData ? styles.inputErro : null]}
-            placeholder="Data do evento (DD/MM/AAAA) *"
-            value={dataEvento}
-            onChangeText={handleChangeDataEvento}
-            keyboardType="numeric"
-            maxLength={10}
-/>
-{erroData ? (
-  <Text style={styles.textoErro}>{erroData}</Text>
-) : null}
+
+            <Text style={styles.labelData}>Data minima: {hojeExibicao}</Text>
+            <TextInput
+              style={[styles.input, erroData ? styles.inputErro : null]}
+              placeholder="Data do evento (DD/MM/AAAA) *"
+              value={dataEvento}
+              onChangeText={handleChangeDataEvento}
+              keyboardType="numeric"
+              maxLength={10}
+            />
+            {erroData ? (
+              <Text style={styles.textoErro}>{erroData}</Text>
+            ) : null}
 
             <TextInput
               style={styles.input}
-              placeholder="Orcamento (ex: 5000.00)"
+              placeholder="Orcamento (ex: 5.000,00)"
               value={orcamento}
-              onChangeText={setOrcamento}
+              onChangeText={(texto) => setOrcamento(aplicarMascaraOrcamento(texto))}
               keyboardType="numeric"
               maxLength={12}
             />
@@ -254,10 +244,10 @@ const styles = StyleSheet.create({
   modalTitulo: { fontSize: 18, fontWeight: 'bold', color: '#9b59b6', marginBottom: 16 },
   labelData: { fontSize: 12, color: '#888', marginBottom: 6, marginTop: -8 },
   input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 16 },
+  inputErro: { borderColor: '#e74c3c' },
+  textoErro: { fontSize: 12, color: '#e74c3c', marginBottom: 12, marginTop: -12, fontStyle: 'italic' },
   btnSalvar: { backgroundColor: '#9b59b6', padding: 14, borderRadius: 8, alignItems: 'center', marginBottom: 10, marginTop: 8 },
   btnSalvarText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   btnCancelar: { padding: 14, alignItems: 'center' },
   btnCancelarText: { color: '#888', fontSize: 16 },
-  inputErro: { borderColor: '#e74c3c' },
-  textoErro: { fontSize: 12, color: '#e74c3c', marginBottom: 12, marginTop: -12, fontStyle: 'italic' }, 
 });
