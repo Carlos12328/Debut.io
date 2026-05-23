@@ -7,6 +7,8 @@ export interface EventoView {
   showError(message: string): void;
   onEventosCargados(eventos: Evento[]): void;
   onEventoCadastrado(evento: Evento): void;
+  onEventoAtualizado(evento: Evento): void;
+  onEventoEncerrado(evento: Evento): void;
 }
 
 export class EventoPresenter {
@@ -37,7 +39,7 @@ export class EventoPresenter {
     if (!this.view) return;
     const orcamentoNum = parseFloat(orcamento.replace(',', '.'));
     if (isNaN(orcamentoNum)) {
-      this.view.showError('Orçamento inválido.');
+      this.view.showError('Orcamento invalido.');
       return;
     }
     this.view.showLoading();
@@ -46,6 +48,37 @@ export class EventoPresenter {
       this.view.onEventoCadastrado(evento);
     } catch (error: any) {
       this.view.showError(error.message ?? 'Erro ao cadastrar evento.');
+    } finally {
+      this.view.hideLoading();
+    }
+  }
+
+  async handleEditarEvento(id_evento: number, nome: string, data_evento: string, orcamento: string) {
+    if (!this.view) return;
+    const orcamentoNum = parseFloat(orcamento.replace(',', '.'));
+    if (isNaN(orcamentoNum)) {
+      this.view.showError('Orcamento invalido.');
+      return;
+    }
+    this.view.showLoading();
+    try {
+      const evento = await this.eventoService.editar(id_evento, nome, data_evento, orcamentoNum);
+      this.view.onEventoAtualizado(evento);
+    } catch (error: any) {
+      this.view.showError(error.message ?? 'Erro ao editar evento.');
+    } finally {
+      this.view.hideLoading();
+    }
+  }
+
+  async handleEncerrarEvento(id_evento: number) {
+    if (!this.view) return;
+    this.view.showLoading();
+    try {
+      const evento = await this.eventoService.encerrar(id_evento);
+      this.view.onEventoEncerrado(evento);
+    } catch (error: any) {
+      this.view.showError(error.message ?? 'Erro ao encerrar evento.');
     } finally {
       this.view.hideLoading();
     }

@@ -36,12 +36,16 @@ export class EventoSQLiteRepository implements EventoRepository {
   }
 
   async update(id: EntityId, data: Partial<Evento>): Promise<Evento> {
-    const db = await getDatabase();
-    const campos = Object.keys(data).map((k) => `${k} = ?`).join(', ');
-    const valores = [...Object.values(data), id];
-    await db.runAsync(`UPDATE evento SET ${campos} WHERE id_evento = ?`, valores);
-    return (await this.getById(id))!;
-  }
+  const db = await getDatabase();
+  const chaves = Object.keys(data);
+  const valores = Object.values(data);
+  const campos = chaves.map((k) => `${k} = ?`).join(', ');
+  await db.runAsync(
+    `UPDATE evento SET ${campos} WHERE id_evento = ?`,
+    [...valores, id]
+  );
+  return (await this.getById(id))!;
+}
 
   async remove(id: EntityId): Promise<void> {
     const db = await getDatabase();

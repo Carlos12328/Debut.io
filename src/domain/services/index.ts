@@ -83,6 +83,7 @@ export class CadastroServiceImpl implements CadastroService {
 export interface EventoService {
   cadastrar(id_usuario: number, nome: string, data_evento: string, orcamento: number): Promise<Evento>;
   listar(id_usuario: number): Promise<Evento[]>;
+  editar(id_evento: number, nome: string, data_evento: string, orcamento: number): Promise<Evento>;
   encerrar(id_evento: number): Promise<Evento>;
 }
 
@@ -109,13 +110,27 @@ export class EventoServiceImpl implements EventoService {
     return await this.eventoRepository.getByUsuario(id_usuario);
   }
 
-  async encerrar(id_evento: number): Promise<Evento> {
-    return await this.eventoRepository.update(id_evento, { status: 'encerrado' });
+async editar(id_evento: number, nome: string, data_evento: string, orcamento: number): Promise<Evento> {
+  if (!nome) throw new Error('O nome do evento e obrigatorio.');
+  if (!data_evento) throw new Error('A data do evento e obrigatoria.');
+  if (orcamento <= 0) throw new Error('O orcamento deve ser maior que zero.');
+
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  const dataInformada = new Date(data_evento);
+  if (dataInformada < hoje) {
+    throw new Error('A data do evento nao pode ser uma data passada.');
   }
+
+  return await this.eventoRepository.update(id_evento, { nome, data_evento, orcamento });
 }
 
+async encerrar(id_evento: number): Promise<Evento> {
+  return await this.eventoRepository.update(id_evento, { status: 'encerrado' });
+}
+}
 // ─── Fornecedor ──────────────────────────────────────────
-export interface FornecedorService {
+  export interface FornecedorService {
   cadastrar(
     id_evento: number,
     nome: string,
