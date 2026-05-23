@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, FlatList, Modal, ScrollView, Platform,} from 'react-native';
+import {View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, FlatList, Modal, ScrollView, Platform, StatusBar, } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { EventoPresenter, EventoView as IEventoView } from '../presenters/EventoPresenter';
 import { Evento } from '../../../domain/models';
@@ -20,6 +20,9 @@ export function EventoView({ presenter, onSelecionarEvento }: Props) {
   const [orcamento, setOrcamento] = useState('');
   const [erroData, setErroData] = useState('');
   const insets = useSafeAreaInsets();
+  const topoSeguro = Platform.OS === 'ios'
+  ? Math.max(insets.top, 59)
+  : (StatusBar.currentHeight ?? 24);
 
   // Modal de editar
   const [modalEditarVisivel, setModalEditarVisivel] = useState(false);
@@ -209,7 +212,7 @@ export function EventoView({ presenter, onSelecionarEvento }: Props) {
 );
 
   return (
-  <View style={[styles.container, { paddingTop: insets.top }]}>
+  <View style={[styles.container, { paddingTop: topoSeguro }]}>
     <View style={styles.header}>
       <Text style={styles.titulo}>Meus Eventos</Text>
       <TouchableOpacity
