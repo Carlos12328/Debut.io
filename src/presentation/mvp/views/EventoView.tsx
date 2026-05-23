@@ -242,9 +242,9 @@ export function EventoView({ presenter, onSelecionarEvento }: Props) {
       />
 
       <Modal visible={modalVisivel} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <ScrollView contentContainerStyle={styles.modalContent}>
-            <Text style={styles.modalTitulo}>Novo Evento</Text>
+           <View style={styles.modalOverlay}>
+           <ScrollView contentContainerStyle={[styles.modalContent, { paddingTop: Math.max(insets.top, 59) }]}>
+           <Text style={styles.modalTitulo}>Novo Evento</Text>
             <TextInput style={styles.input} placeholder="Nome do evento *" value={nome} onChangeText={setNome} maxLength={80} />
             <Text style={styles.labelData}>Data minima: {hojeExibicao}</Text>
             <TextInput
@@ -268,8 +268,8 @@ export function EventoView({ presenter, onSelecionarEvento }: Props) {
       </Modal>
 
       <Modal visible={modalEditarVisivel} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <ScrollView contentContainerStyle={styles.modalContent}>
+            <View style={styles.modalOverlay}>
+            <ScrollView contentContainerStyle={[styles.modalContent, { paddingTop: Math.max(insets.top, 59) }]}>
             <Text style={styles.modalTitulo}>Editar Evento</Text>
             <TextInput style={styles.input} placeholder="Nome do evento *" value={nomeEditar} onChangeText={setNomeEditar} maxLength={80} />
             <Text style={styles.labelData}>Data minima: {hojeExibicao}</Text>
