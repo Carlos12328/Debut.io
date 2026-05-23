@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ActivityIndicator, Alert, FlatList, Modal, ScrollView,
-} from 'react-native';
+import {View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, FlatList, Modal, ScrollView, Platform,} from 'react-native'; 
 import { EventoPresenter, EventoView as IEventoView } from '../presenters/EventoPresenter';
 import { Evento } from '../../../domain/models';
 
@@ -148,18 +145,28 @@ export function EventoView({ presenter, onSelecionarEvento }: Props) {
 
   const confirmarEncerrar = (evento: Evento) => {
   if (evento.status === 'encerrado') {
-    Alert.alert('Aviso', 'Este evento ja esta encerrado.');
+    Alert.alert('Aviso', 'Este evento já esta encerrado.');
     return;
   }
-  // Na web, Alert.alert com botoes nao funciona — usa confirm do navegador
-  const confirmado = window.confirm(
-    `Deseja encerrar o evento "${evento.nome}"? Esta acao nao pode ser desfeita.`
-  );
-  if (confirmado) {
-    presenter.handleEncerrarEvento(evento.id_evento);
+
+  if (Platform.OS === 'web') {
+    const confirmado = (window as any).confirm(
+      `Deseja encerrar o evento "${evento.nome}"? Esta ação não pode ser desfeita.`
+    );
+    if (confirmado) {
+      presenter.handleEncerrarEvento(evento.id_evento);
+    }
+  } else {
+    Alert.alert(
+      'Encerrar evento',
+      `Deseja encerrar o evento "${evento.nome}"? Esta ação não pode ser desfeita.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Encerrar', style: 'destructive', onPress: () => presenter.handleEncerrarEvento(evento.id_evento) },
+      ]
+    );
   }
 };
-
   const renderEvento = ({ item }: { item: Evento }) => (
   <View style={styles.card}>
     <TouchableOpacity style={styles.cardToque} onPress={() => onSelecionarEvento(item)}>
