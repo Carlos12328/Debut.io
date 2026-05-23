@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, FlatList, Modal, ScrollView, Platform,} from 'react-native'; 
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { EventoPresenter, EventoView as IEventoView } from '../presenters/EventoPresenter';
 import { Evento } from '../../../domain/models';
 
@@ -207,13 +208,17 @@ export function EventoView({ presenter, onSelecionarEvento }: Props) {
 );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.titulo}>Meus Eventos</Text>
-        <TouchableOpacity style={styles.btnNovo} onPress={() => setModalVisivel(true)}>
-          <Text style={styles.btnNovoText}>+ Novo</Text>
-        </TouchableOpacity>
-      </View>
+  <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <View style={styles.header}>
+      <Text style={styles.titulo}>Meus Eventos</Text>
+      <TouchableOpacity
+        style={styles.btnNovo}
+        onPress={() => setModalVisivel(true)}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
+        <Text style={styles.btnNovoText}>+ Novo</Text>
+      </TouchableOpacity>
+    </View>
 
       {loading && <ActivityIndicator color="#9b59b6" style={{ marginTop: 20 }} />}
 
@@ -310,7 +315,7 @@ export function EventoView({ presenter, onSelecionarEvento }: Props) {
           </ScrollView>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
 
