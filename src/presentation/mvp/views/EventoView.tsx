@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, FlatList, Modal, ScrollView, Platform,} from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { EventoPresenter, EventoView as IEventoView } from '../presenters/EventoPresenter';
 import { Evento } from '../../../domain/models';
 
@@ -209,17 +209,17 @@ export function EventoView({ presenter, onSelecionarEvento }: Props) {
 );
 
   return (
-  <SafeAreaView style={styles.container}>
-    <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-  <Text style={styles.titulo}>Meus Eventos</Text>
-  <TouchableOpacity
-    style={styles.btnNovo}
-    onPress={() => setModalVisivel(true)}
-    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-  >
-    <Text style={styles.btnNovoText}>+ Novo</Text>
-  </TouchableOpacity>
-</View>
+  <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={styles.header}>
+      <Text style={styles.titulo}>Meus Eventos</Text>
+      <TouchableOpacity
+        style={styles.btnNovo}
+        onPress={() => setModalVisivel(true)}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
+        <Text style={styles.btnNovoText}>+ Novo</Text>
+      </TouchableOpacity>
+    </View>
 
       {loading && <ActivityIndicator color="#9b59b6" style={{ marginTop: 20 }} />}
 
@@ -237,18 +237,11 @@ export function EventoView({ presenter, onSelecionarEvento }: Props) {
         contentContainerStyle={{ padding: 16, gap: 12 }}
       />
 
-      {/* Modal Criar */}
       <Modal visible={modalVisivel} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <ScrollView contentContainerStyle={styles.modalContent}>
             <Text style={styles.modalTitulo}>Novo Evento</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Nome do evento *"
-              value={nome}
-              onChangeText={setNome}
-              maxLength={80}
-            />
+            <TextInput style={styles.input} placeholder="Nome do evento *" value={nome} onChangeText={setNome} maxLength={80} />
             <Text style={styles.labelData}>Data minima: {hojeExibicao}</Text>
             <TextInput
               style={[styles.input, erroData ? styles.inputErro : null]}
@@ -259,14 +252,7 @@ export function EventoView({ presenter, onSelecionarEvento }: Props) {
               maxLength={10}
             />
             {erroData ? <Text style={styles.textoErro}>{erroData}</Text> : null}
-            <TextInput
-              style={styles.input}
-              placeholder="Orcamento (ex: 5.000,00)"
-              value={orcamento}
-              onChangeText={(t) => setOrcamento(aplicarMascaraOrcamento(t))}
-              keyboardType="numeric"
-              maxLength={12}
-            />
+            <TextInput style={styles.input} placeholder="Orcamento (ex: 5.000,00)" value={orcamento} onChangeText={(t) => setOrcamento(aplicarMascaraOrcamento(t))} keyboardType="numeric" maxLength={12} />
             <TouchableOpacity style={styles.btnSalvar} onPress={handleSalvar} disabled={loading}>
               {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnSalvarText}>Salvar</Text>}
             </TouchableOpacity>
@@ -277,18 +263,11 @@ export function EventoView({ presenter, onSelecionarEvento }: Props) {
         </View>
       </Modal>
 
-      {/* Modal Editar */}
       <Modal visible={modalEditarVisivel} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <ScrollView contentContainerStyle={styles.modalContent}>
             <Text style={styles.modalTitulo}>Editar Evento</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Nome do evento *"
-              value={nomeEditar}
-              onChangeText={setNomeEditar}
-              maxLength={80}
-            />
+            <TextInput style={styles.input} placeholder="Nome do evento *" value={nomeEditar} onChangeText={setNomeEditar} maxLength={80} />
             <Text style={styles.labelData}>Data minima: {hojeExibicao}</Text>
             <TextInput
               style={[styles.input, erroDataEditar ? styles.inputErro : null]}
@@ -299,14 +278,7 @@ export function EventoView({ presenter, onSelecionarEvento }: Props) {
               maxLength={10}
             />
             {erroDataEditar ? <Text style={styles.textoErro}>{erroDataEditar}</Text> : null}
-            <TextInput
-              style={styles.input}
-              placeholder="Orcamento (ex: 5.000,00)"
-              value={orcamentoEditar}
-              onChangeText={(t) => setOrcamentoEditar(aplicarMascaraOrcamento(t))}
-              keyboardType="numeric"
-              maxLength={12}
-            />
+            <TextInput style={styles.input} placeholder="Orcamento (ex: 5.000,00)" value={orcamentoEditar} onChangeText={(t) => setOrcamentoEditar(aplicarMascaraOrcamento(t))} keyboardType="numeric" maxLength={12} />
             <TouchableOpacity style={styles.btnSalvar} onPress={handleSalvarEdicao} disabled={loading}>
               {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnSalvarText}>Salvar alteracoes</Text>}
             </TouchableOpacity>
@@ -316,8 +288,8 @@ export function EventoView({ presenter, onSelecionarEvento }: Props) {
           </ScrollView>
         </View>
       </Modal>
-    </SafeAreaView>
-  );
+  </View>
+);
 }
 
 const styles = StyleSheet.create({
