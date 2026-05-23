@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ActivityIndicator, Alert, FlatList, Modal, ScrollView,
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, FlatList, Modal, ScrollView, } from 'react-native';
 import { FornecedorPresenter, FornecedorView as IFornecedorView } from '../presenters/FornecedorPresenter';
 import { Fornecedor } from '../../../domain/models';
+import { SafeScreen } from '../../components/SafeScreen';   
 
 interface Props {
   presenter: FornecedorPresenter;
@@ -110,7 +108,7 @@ export function FornecedorView({ presenter, nomeEvento, onVoltar }: Props) {
   );
 
   return (
-    <View style={styles.container}>
+  <SafeScreen backgroundColor="#f5f5f5">
 
       <View style={styles.header}>
         <TouchableOpacity onPress={onVoltar}>
@@ -268,12 +266,10 @@ export function FornecedorView({ presenter, nomeEvento, onVoltar }: Props) {
             <TouchableOpacity style={styles.btnCancelar} onPress={() => setModalVisivel(false)}>
               <Text style={styles.btnCancelarText}>Cancelar</Text>
             </TouchableOpacity>
-
           </ScrollView>
         </View>
       </Modal>
-
-    </View>
+    </SafeScreen>
   );
 }
 

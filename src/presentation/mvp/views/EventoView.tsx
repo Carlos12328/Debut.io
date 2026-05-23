@@ -3,6 +3,7 @@ import {View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { EventoPresenter, EventoView as IEventoView } from '../presenters/EventoPresenter';
 import { Evento } from '../../../domain/models';
+import { SafeScreen } from '../../components/SafeScreen';
 
 interface Props {
   presenter: EventoPresenter;
@@ -212,7 +213,7 @@ export function EventoView({ presenter, onSelecionarEvento }: Props) {
 );
 
   return (
-  <View style={[styles.container, { paddingTop: topoSeguro }]}>
+  <SafeScreen backgroundColor="#f5f5f5">
     <View style={styles.header}>
       <Text style={styles.titulo}>Meus Eventos</Text>
       <TouchableOpacity
@@ -291,7 +292,7 @@ export function EventoView({ presenter, onSelecionarEvento }: Props) {
           </ScrollView>
         </View>
       </Modal>
-  </View>
+  </SafeScreen>
 );
 }
 

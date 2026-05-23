@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View, Text, TextInput, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Alert, ScrollView,
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, ScrollView, } from 'react-native';
 import { CadastroPresenter, CadastroView as ICadastroView } from '../presenters/CadastroPresenter';
+import { SafeScreen } from '../../components/SafeScreen';
 import { Usuario, PerfilUsuario } from '../../../domain/models';
 
 interface Props {
@@ -132,6 +130,7 @@ export function CadastroView({ presenter, onCadastroSuccess, onVoltarLogin }: Pr
   };
 
   return (
+  <SafeScreen>
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Debut.io</Text>
       <Text style={styles.subtitle}>Criar conta</Text>
@@ -276,6 +275,7 @@ export function CadastroView({ presenter, onCadastroSuccess, onVoltarLogin }: Pr
         <Text style={styles.link}>Ja tem conta? Entrar</Text>
       </TouchableOpacity>
     </ScrollView>
+    </SafeScreen>
   );
 }
 
