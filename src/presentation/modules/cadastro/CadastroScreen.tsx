@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { CadastroView } from '../../mvp/views/CadastroView';
 import { CadastroPresenter } from '../../mvp/presenters/CadastroPresenter';
 import { CadastroServiceImpl } from '../../../domain/services';
-import { UsuarioSQLiteRepository } from '../../../persistence/repositories/UsuarioSQLiteRepository';
+import { UsuarioSupabaseRepository } from '../../../persistence/repositories/UsuarioSupabaseRepository';
 import { Usuario } from '../../../domain/models';
 
 interface Props {
@@ -12,7 +12,7 @@ interface Props {
 
 export function CadastroScreen({ onCadastroSuccess, onVoltarLogin }: Props) {
   const presenter = useMemo(() => {
-    const repo = new UsuarioSQLiteRepository();
+    const repo = new UsuarioSupabaseRepository();
     const service = new CadastroServiceImpl(repo);
     return new CadastroPresenter(service);
   }, []);

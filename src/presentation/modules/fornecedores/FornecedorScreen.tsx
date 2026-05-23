@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { FornecedorView } from '../../mvp/views/FornecedorView';
 import { FornecedorPresenter } from '../../mvp/presenters/FornecedorPresenter';
 import { FornecedorServiceImpl } from '../../../domain/services';
-import { FornecedorSQLiteRepository } from '../../../persistence/repositories/FornecedorSQLiteRepository';
+import { FornecedorSupabaseRepository } from '../../../persistence/repositories/FornecedorSupabaseRepository';
 import { Evento } from '../../../domain/models';
 
 interface Props {
@@ -12,7 +12,7 @@ interface Props {
 
 export function FornecedorScreen({ evento, onVoltar }: Props) {
   const presenter = useMemo(() => {
-    const repo = new FornecedorSQLiteRepository();
+    const repo = new FornecedorSupabaseRepository();
     const service = new FornecedorServiceImpl(repo);
     return new FornecedorPresenter(service, evento.id_evento);
   }, [evento.id_evento]);

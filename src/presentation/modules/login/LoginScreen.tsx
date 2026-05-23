@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { LoginView } from '../../mvp/views/LoginView';
 import { LoginPresenter } from '../../mvp/presenters/LoginPresenter';
 import { AuthServiceImpl } from '../../../domain/services';
-import { UsuarioSQLiteRepository } from '../../../persistence/repositories/UsuarioSQLiteRepository';
+import { UsuarioSupabaseRepository } from '../../../persistence/repositories/UsuarioSupabaseRepository';
 import { Usuario } from '../../../domain/models';
 
 interface Props {
@@ -12,7 +12,7 @@ interface Props {
 
 export function LoginScreen({ onLoginSuccess, onIrParaCadastro }: Props) {
   const presenter = useMemo(() => {
-    const repo = new UsuarioSQLiteRepository();
+    const repo = new UsuarioSupabaseRepository();
     const service = new AuthServiceImpl(repo);
     return new LoginPresenter(service);
   }, []);
