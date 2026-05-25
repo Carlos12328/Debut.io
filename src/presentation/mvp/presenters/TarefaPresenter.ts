@@ -1,5 +1,5 @@
 import { TarefaService } from '../../../domain/services';
-import { Tarefa } from '../../../domain/models';
+import { Tarefa, StatusTarefa, PrioridadeTarefa } from '../../../domain/models';
 
 export interface TarefaView {
   showLoading(): void;
@@ -7,7 +7,7 @@ export interface TarefaView {
   showError(message: string): void;
   onTarefasCarregadas(tarefas: Tarefa[]): void;
   onTarefaCadastrada(tarefa: Tarefa): void;
-  onTarefaConcluida(tarefa: Tarefa): void;
+  onTarefaAtualizada(tarefa: Tarefa): void;
   onTarefaRemovida(id: number): void;
 }
 
@@ -32,11 +32,14 @@ export class TarefaPresenter {
     }
   }
 
-  async handleCadastrar(descricao: string) {
+  async handleCadastrar(descricao: string, prioridade: PrioridadeTarefa, prazo: string, responsavel: string) {
     if (!this.view) return;
     this.view.showLoading();
     try {
-      const tarefa = await this.tarefaService.cadastrar(this.id_evento, descricao);
+      const tarefa = await this.tarefaService.cadastrar(
+        this.id_evento, descricao, prioridade,
+        prazo || undefined, responsavel || undefined
+      );
       this.view.onTarefaCadastrada(tarefa);
     } catch (e: any) {
       this.view.showError(e.message ?? 'Erro ao cadastrar tarefa.');
@@ -45,13 +48,13 @@ export class TarefaPresenter {
     }
   }
 
-  async handleConcluir(id_tarefa: number) {
+  async handleAtualizarStatus(id_tarefa: number, status: StatusTarefa) {
     if (!this.view) return;
     try {
-      const tarefa = await this.tarefaService.concluir(id_tarefa);
-      this.view.onTarefaConcluida(tarefa);
+      const tarefa = await this.tarefaService.atualizarStatus(id_tarefa, status);
+      this.view.onTarefaAtualizada(tarefa);
     } catch (e: any) {
-      this.view.showError(e.message ?? 'Erro ao concluir tarefa.');
+      this.view.showError(e.message ?? 'Erro ao atualizar status.');
     }
   }
 

@@ -1,0 +1,613 @@
+diff --git a/src/domain/models/index.ts b/src/domain/models/index.ts
+index 4037b33..b082b8a 100644
+--- a/src/domain/models/index.ts
++++ b/src/domain/models/index.ts
+@@ -54,13 +54,17 @@ export interface Pagamento {
+   status: StatusPagamento;
+ }
+ 
+-export type StatusTarefa = 'pendente' | 'concluida';
++export type StatusTarefa = 'pendente' | 'em_andamento' | 'concluida';
++export type PrioridadeTarefa = 'alta' | 'media' | 'baixa';
+ 
+ export interface Tarefa {
+   id_tarefa: EntityId;
+   id_evento: EntityId;
+   descricao: string;
+   status: StatusTarefa;
++  prioridade: PrioridadeTarefa;
++  prazo?: string;
++  responsavel?: string;
+ }
+ 
+ export interface Compromisso {
+diff --git a/src/domain/services/index.ts b/src/domain/services/index.ts
+index 4cd9db4..f64150f 100644
+--- a/src/domain/services/index.ts
++++ b/src/domain/services/index.ts
+@@ -1,5 +1,5 @@
+-import { Usuario, PerfilUsuario, Evento, Fornecedor } from '../models';
+-import { UsuarioRepository, EventoRepository, FornecedorRepository } from '../../persistence/repositories';
++import { Usuario, PerfilUsuario, Evento, Fornecedor, Pagamento, StatusPagamento, Tarefa, StatusTarefa, PrioridadeTarefa, Compromisso } from '../models';
++import { UsuarioRepository, EventoRepository, FornecedorRepository, PagamentoRepository, TarefaRepository, CompromissoRepository } from '../../persistence/repositories';
+ 
+ // ─── Auth ────────────────────────────────────────────────
+ export interface AuthService {
+@@ -59,21 +59,10 @@ export class CadastroServiceImpl implements CadastroService {
+     if (senha.length < 6) throw new Error('A senha deve ter pelo menos 6 caracteres.');
+     const existente = await this.usuarioRepository.getByEmail(email);
+     if (existente) throw new Error('Já existe uma conta com este e-mail.');
+-
+     const novoUsuario: Usuario = {
+-      id_usuario: 0,
+-      nome,
+-      email,
+-      senha_hash: senha,
+-      perfil,
+-      cpf,
+-      data_nascimento,
+-      endereco_logradouro,
+-      endereco_numero,
+-      endereco_bairro,
+-      endereco_cidade,
+-      endereco_estado,
+-      endereco_cep,
++      id_usuario: 0, nome, email, senha_hash: senha, perfil, cpf,
++      data_nascimento, endereco_logradouro, endereco_numero,
++      endereco_bairro, endereco_cidade, endereco_estado, endereco_cep,
+     };
+     return await this.usuarioRepository.create(novoUsuario);
+   }
+@@ -94,14 +83,10 @@ export class EventoServiceImpl implements EventoService {
+     if (!nome) throw new Error('O nome do evento é obrigatório.');
+     if (!data_evento) throw new Error('A data do evento é obrigatória.');
+     if (orcamento <= 0) throw new Error('O orçamento deve ser maior que zero.');
+-
+     const hoje = new Date();
+     hoje.setHours(0, 0, 0, 0);
+     const dataInformada = new Date(data_evento);
+-    if (dataInformada < hoje) {
+-      throw new Error('A data do evento não pode ser uma data passada.');
+-    }
+-
++    if (dataInformada < hoje) throw new Error('A data do evento não pode ser uma data passada.');
+     const novoEvento: Evento = { id_evento: 0, id_usuario, nome, data_evento, orcamento, status: 'ativo' };
+     return await this.eventoRepository.create(novoEvento);
+   }
+@@ -110,41 +95,30 @@ export class EventoServiceImpl implements EventoService {
+     return await this.eventoRepository.getByUsuario(id_usuario);
+   }
+ 
+-async editar(id_evento: number, nome: string, data_evento: string, orcamento: number): Promise<Evento> {
+-  if (!nome) throw new Error('O nome do evento e obrigatorio.');
+-  if (!data_evento) throw new Error('A data do evento e obrigatoria.');
+-  if (orcamento <= 0) throw new Error('O orcamento deve ser maior que zero.');
+-
+-  const hoje = new Date();
+-  hoje.setHours(0, 0, 0, 0);
+-  const dataInformada = new Date(data_evento);
+-  if (dataInformada < hoje) {
+-    throw new Error('A data do evento nao pode ser uma data passada.');
++  async editar(id_evento: number, nome: string, data_evento: string, orcamento: number): Promise<Evento> {
++    if (!nome) throw new Error('O nome do evento e obrigatorio.');
++    if (!data_evento) throw new Error('A data do evento e obrigatoria.');
++    if (orcamento <= 0) throw new Error('O orcamento deve ser maior que zero.');
++    const hoje = new Date();
++    hoje.setHours(0, 0, 0, 0);
++    const dataInformada = new Date(data_evento);
++    if (dataInformada < hoje) throw new Error('A data do evento nao pode ser uma data passada.');
++    return await this.eventoRepository.update(id_evento, { nome, data_evento, orcamento });
+   }
+ 
+-  return await this.eventoRepository.update(id_evento, { nome, data_evento, orcamento });
++  async encerrar(id_evento: number): Promise<Evento> {
++    return await this.eventoRepository.update(id_evento, { status: 'encerrado' });
++  }
+ }
+ 
+-async encerrar(id_evento: number): Promise<Evento> {
+-  return await this.eventoRepository.update(id_evento, { status: 'encerrado' });
+-}
+-}
+ // ─── Fornecedor ──────────────────────────────────────────
+-  export interface FornecedorService {
++export interface FornecedorService {
+   cadastrar(
+-    id_evento: number,
+-    nome: string,
+-    tipo_servico: string,
+-    valor: number,
+-    cnpj?: string,
+-    telefone?: string,
+-    email?: string,
+-    endereco_logradouro?: string,
+-    endereco_numero?: string,
+-    endereco_bairro?: string,
+-    endereco_cidade?: string,
+-    endereco_estado?: string,
+-    endereco_cep?: string,
++    id_evento: number, nome: string, tipo_servico: string, valor: number,
++    cnpj?: string, telefone?: string, email?: string,
++    endereco_logradouro?: string, endereco_numero?: string,
++    endereco_bairro?: string, endereco_cidade?: string,
++    endereco_estado?: string, endereco_cep?: string,
+   ): Promise<Fornecedor>;
+   listar(id_evento: number): Promise<Fornecedor[]>;
+   remover(id_fornecedor: number): Promise<void>;
+@@ -154,39 +128,19 @@ export class FornecedorServiceImpl implements FornecedorService {
+   constructor(private readonly fornecedorRepository: FornecedorRepository) { }
+ 
+   async cadastrar(
+-    id_evento: number,
+-    nome: string,
+-    tipo_servico: string,
+-    valor: number,
+-    cnpj?: string,
+-    telefone?: string,
+-    email?: string,
+-    endereco_logradouro?: string,
+-    endereco_numero?: string,
+-    endereco_bairro?: string,
+-    endereco_cidade?: string,
+-    endereco_estado?: string,
+-    endereco_cep?: string,
++    id_evento: number, nome: string, tipo_servico: string, valor: number,
++    cnpj?: string, telefone?: string, email?: string,
++    endereco_logradouro?: string, endereco_numero?: string,
++    endereco_bairro?: string, endereco_cidade?: string,
++    endereco_estado?: string, endereco_cep?: string,
+   ): Promise<Fornecedor> {
+     if (!nome) throw new Error('O nome do fornecedor é obrigatório.');
+     if (!tipo_servico) throw new Error('O tipo de serviço é obrigatório.');
+     if (valor <= 0) throw new Error('O valor deve ser maior que zero.');
+-
+     const novo: Fornecedor = {
+-      id_fornecedor: 0,
+-      id_evento,
+-      nome,
+-      tipo_servico,
+-      valor,
+-      cnpj,
+-      telefone,
+-      email,
+-      endereco_logradouro,
+-      endereco_numero,
+-      endereco_bairro,
+-      endereco_cidade,
+-      endereco_estado,
+-      endereco_cep,
++      id_fornecedor: 0, id_evento, nome, tipo_servico, valor,
++      cnpj, telefone, email, endereco_logradouro, endereco_numero,
++      endereco_bairro, endereco_cidade, endereco_estado, endereco_cep,
+     };
+     return await this.fornecedorRepository.create(novo);
+   }
+@@ -200,11 +154,7 @@ export class FornecedorServiceImpl implements FornecedorService {
+   }
+ }
+ 
+-
+ // ─── Pagamento ───────────────────────────────────────────
+-import { Pagamento, StatusPagamento, Tarefa, StatusTarefa, Compromisso } from '../models';
+-import { PagamentoRepository, TarefaRepository, CompromissoRepository } from '../../persistence/repositories';
+-
+ export interface PagamentoService {
+   cadastrar(id_fornecedor: number, valor: number, vencimento: string): Promise<Pagamento>;
+   listarPorEvento(id_evento: number): Promise<Pagamento[]>;
+@@ -237,18 +187,18 @@ export class PagamentoServiceImpl implements PagamentoService {
+ 
+ // ─── Tarefa ──────────────────────────────────────────────
+ export interface TarefaService {
+-  cadastrar(id_evento: number, descricao: string): Promise<Tarefa>;
++  cadastrar(id_evento: number, descricao: string, prioridade: PrioridadeTarefa, prazo?: string, responsavel?: string): Promise<Tarefa>;
+   listar(id_evento: number): Promise<Tarefa[]>;
+-  concluir(id_tarefa: number): Promise<Tarefa>;
++  atualizarStatus(id_tarefa: number, status: StatusTarefa): Promise<Tarefa>;
+   remover(id_tarefa: number): Promise<void>;
+ }
+ 
+ export class TarefaServiceImpl implements TarefaService {
+   constructor(private readonly tarefaRepository: TarefaRepository) {}
+ 
+-  async cadastrar(id_evento: number, descricao: string): Promise<Tarefa> {
++  async cadastrar(id_evento: number, descricao: string, prioridade: PrioridadeTarefa, prazo?: string, responsavel?: string): Promise<Tarefa> {
+     if (!descricao) throw new Error('A descrição da tarefa é obrigatória.');
+-    const nova: Tarefa = { id_tarefa: 0, id_evento, descricao, status: 'pendente' };
++    const nova: Tarefa = { id_tarefa: 0, id_evento, descricao, status: 'pendente', prioridade, prazo, responsavel };
+     return await this.tarefaRepository.create(nova);
+   }
+ 
+@@ -256,8 +206,8 @@ export class TarefaServiceImpl implements TarefaService {
+     return await this.tarefaRepository.getByEvento(id_evento);
+   }
+ 
+-  async concluir(id_tarefa: number): Promise<Tarefa> {
+-    return await this.tarefaRepository.update(id_tarefa, { status: 'concluida' });
++  async atualizarStatus(id_tarefa: number, status: StatusTarefa): Promise<Tarefa> {
++    return await this.tarefaRepository.update(id_tarefa, { status });
+   }
+ 
+   async remover(id_tarefa: number): Promise<void> {
+diff --git a/src/persistence/repositories/TarefaSupabaseRepository.ts b/src/persistence/repositories/TarefaSupabaseRepository.ts
+index ae21d67..3cd0759 100644
+--- a/src/persistence/repositories/TarefaSupabaseRepository.ts
++++ b/src/persistence/repositories/TarefaSupabaseRepository.ts
+@@ -21,7 +21,14 @@ export class TarefaSupabaseRepository implements TarefaRepository {
+   async create(data: Tarefa): Promise<Tarefa> {
+     const { data: nova } = await supabase
+       .from('tarefa')
+-      .insert({ id_evento: data.id_evento, descricao: data.descricao, status: data.status })
++      .insert({
++        id_evento: data.id_evento,
++        descricao: data.descricao,
++        status: data.status,
++        prioridade: data.prioridade,
++        prazo: data.prazo ?? null,
++        responsavel: data.responsavel ?? null,
++      })
+       .select().single();
+     return nova!;
+   }
+diff --git a/src/presentation/mvp/presenters/TarefaPresenter.ts b/src/presentation/mvp/presenters/TarefaPresenter.ts
+index 9aad3db..cb703c9 100644
+--- a/src/presentation/mvp/presenters/TarefaPresenter.ts
++++ b/src/presentation/mvp/presenters/TarefaPresenter.ts
+@@ -1,5 +1,5 @@
+ import { TarefaService } from '../../../domain/services';
+-import { Tarefa } from '../../../domain/models';
++import { Tarefa, StatusTarefa, PrioridadeTarefa } from '../../../domain/models';
+ 
+ export interface TarefaView {
+   showLoading(): void;
+@@ -7,7 +7,7 @@ export interface TarefaView {
+   showError(message: string): void;
+   onTarefasCarregadas(tarefas: Tarefa[]): void;
+   onTarefaCadastrada(tarefa: Tarefa): void;
+-  onTarefaConcluida(tarefa: Tarefa): void;
++  onTarefaAtualizada(tarefa: Tarefa): void;
+   onTarefaRemovida(id: number): void;
+ }
+ 
+@@ -32,11 +32,14 @@ export class TarefaPresenter {
+     }
+   }
+ 
+-  async handleCadastrar(descricao: string) {
++  async handleCadastrar(descricao: string, prioridade: PrioridadeTarefa, prazo: string, responsavel: string) {
+     if (!this.view) return;
+     this.view.showLoading();
+     try {
+-      const tarefa = await this.tarefaService.cadastrar(this.id_evento, descricao);
++      const tarefa = await this.tarefaService.cadastrar(
++        this.id_evento, descricao, prioridade,
++        prazo || undefined, responsavel || undefined
++      );
+       this.view.onTarefaCadastrada(tarefa);
+     } catch (e: any) {
+       this.view.showError(e.message ?? 'Erro ao cadastrar tarefa.');
+@@ -45,13 +48,13 @@ export class TarefaPresenter {
+     }
+   }
+ 
+-  async handleConcluir(id_tarefa: number) {
++  async handleAtualizarStatus(id_tarefa: number, status: StatusTarefa) {
+     if (!this.view) return;
+     try {
+-      const tarefa = await this.tarefaService.concluir(id_tarefa);
+-      this.view.onTarefaConcluida(tarefa);
++      const tarefa = await this.tarefaService.atualizarStatus(id_tarefa, status);
++      this.view.onTarefaAtualizada(tarefa);
+     } catch (e: any) {
+-      this.view.showError(e.message ?? 'Erro ao concluir tarefa.');
++      this.view.showError(e.message ?? 'Erro ao atualizar status.');
+     }
+   }
+ 
+diff --git a/src/presentation/mvp/views/TarefaView.tsx b/src/presentation/mvp/views/TarefaView.tsx
+index 9c1304e..878ccc5 100644
+--- a/src/presentation/mvp/views/TarefaView.tsx
++++ b/src/presentation/mvp/views/TarefaView.tsx
+@@ -1,20 +1,44 @@
+ import React, { useState, useEffect } from 'react';
+ import {
+   View, Text, TextInput, TouchableOpacity, StyleSheet,
+-  ActivityIndicator, Alert, FlatList, Modal,
++  ActivityIndicator, Alert, FlatList, Modal, ScrollView,
+ } from 'react-native';
+ import { TarefaPresenter, TarefaView as ITarefaView } from '../presenters/TarefaPresenter';
+-import { Tarefa } from '../../../domain/models';
++import { Tarefa, StatusTarefa, PrioridadeTarefa } from '../../../domain/models';
+ 
+ interface Props {
+   presenter: TarefaPresenter;
+ }
+ 
++const PRIORIDADE_COR: Record<PrioridadeTarefa, string> = {
++  alta: '#e74c3c',
++  media: '#f39c12',
++  baixa: '#27ae60',
++};
++
++const STATUS_LABEL: Record<StatusTarefa, string> = {
++  pendente: 'Pendente',
++  em_andamento: 'Em andamento',
++  concluida: 'Concluída',
++};
++
++const PROXIMOS_STATUS: Record<StatusTarefa, StatusTarefa[]> = {
++  pendente: ['em_andamento', 'concluida'],
++  em_andamento: ['pendente', 'concluida'],
++  concluida: ['pendente', 'em_andamento'],
++};
++
+ export function TarefaView({ presenter }: Props) {
+   const [tarefas, setTarefas] = useState<Tarefa[]>([]);
+   const [loading, setLoading] = useState(false);
+-  const [modalVisivel, setModalVisivel] = useState(false);
++  const [modalCadastro, setModalCadastro] = useState(false);
++  const [modalDetalhe, setModalDetalhe] = useState<Tarefa | null>(null);
++  const [filtroStatus, setFiltroStatus] = useState<StatusTarefa | 'todos'>('todos');
++  const [filtroPrioridade, setFiltroPrioridade] = useState<PrioridadeTarefa | 'todos'>('todos');
+   const [descricao, setDescricao] = useState('');
++  const [prioridade, setPrioridade] = useState<PrioridadeTarefa>('media');
++  const [prazo, setPrazo] = useState('');
++  const [responsavel, setResponsavel] = useState('');
+ 
+   useEffect(() => {
+     const view: ITarefaView = {
+@@ -24,17 +48,29 @@ export function TarefaView({ presenter }: Props) {
+       onTarefasCarregadas: (lista) => setTarefas(lista),
+       onTarefaCadastrada: (t) => {
+         setTarefas(prev => [...prev, t]);
+-        setModalVisivel(false);
+-        setDescricao('');
++        setModalCadastro(false);
++        setDescricao(''); setPrazo(''); setResponsavel(''); setPrioridade('media');
++      },
++      onTarefaAtualizada: (t) => {
++        setTarefas(prev => prev.map(x => x.id_tarefa === t.id_tarefa ? t : x));
++        setModalDetalhe(t);
++      },
++      onTarefaRemovida: (id) => {
++        setTarefas(prev => prev.filter(t => t.id_tarefa !== id));
++        setModalDetalhe(null);
+       },
+-      onTarefaConcluida: (t) => setTarefas(prev => prev.map(x => x.id_tarefa === t.id_tarefa ? t : x)),
+-      onTarefaRemovida: (id) => setTarefas(prev => prev.filter(t => t.id_tarefa !== id)),
+     };
+     presenter.attachView(view);
+     presenter.carregarTarefas();
+     return () => presenter.detachView();
+   }, [presenter]);
+ 
++  const tarefasFiltradas = tarefas.filter(t => {
++    if (filtroStatus !== 'todos' && t.status !== filtroStatus) return false;
++    if (filtroPrioridade !== 'todos' && t.prioridade !== filtroPrioridade) return false;
++    return true;
++  });
++
+   const confirmarRemocao = (t: Tarefa) => {
+     Alert.alert('Remover', `Remover "${t.descricao}"?`, [
+       { text: 'Cancelar', style: 'cancel' },
+@@ -42,65 +78,146 @@ export function TarefaView({ presenter }: Props) {
+     ]);
+   };
+ 
+-  const pendentes = tarefas.filter(t => t.status === 'pendente');
+-  const concluidas = tarefas.filter(t => t.status === 'concluida');
+-
+   const renderTarefa = ({ item }: { item: Tarefa }) => (
+-    <View style={[styles.card, item.status === 'concluida' && styles.cardConcluido]}>
+-      <TouchableOpacity style={styles.checkbox} onPress={() => item.status === 'pendente' && presenter.handleConcluir(item.id_tarefa)}>
+-        <Text style={styles.checkboxText}>{item.status === 'concluida' ? '✅' : '⬜'}</Text>
+-      </TouchableOpacity>
+-      <Text style={[styles.descricao, item.status === 'concluida' && styles.descricaoConcluida]}>{item.descricao}</Text>
+-      <TouchableOpacity onPress={() => confirmarRemocao(item)}>
+-        <Text style={styles.btnRemover}>✕</Text>
+-      </TouchableOpacity>
+-    </View>
++    <TouchableOpacity style={styles.card} onPress={() => setModalDetalhe(item)}>
++      <View style={[styles.prioridadeBarra, { backgroundColor: PRIORIDADE_COR[item.prioridade] }]} />
++      <View style={styles.cardConteudo}>
++        <Text style={[styles.descricao, item.status === 'concluida' && styles.descricaoConcluida]}>
++          {item.descricao}
++        </Text>
++        <View style={styles.cardRodape}>
++          {item.prazo && <Text style={styles.infoTexto}>📅 {item.prazo.split('-').reverse().join('/')}</Text>}
++          {item.responsavel && <Text style={styles.infoTexto}>👤 {item.responsavel}</Text>}
++          <View style={[styles.statusBadge, {
++            backgroundColor: item.status === 'concluida' ? '#e8f5e9' : item.status === 'em_andamento' ? '#fff3e0' : '#f5f5f5'
++          }]}>
++            <Text style={styles.statusTexto}>{STATUS_LABEL[item.status]}</Text>
++          </View>
++        </View>
++      </View>
++    </TouchableOpacity>
+   );
+ 
+   return (
+     <View style={styles.container}>
+       <View style={styles.header}>
+         <Text style={styles.titulo}>Tarefas</Text>
+-        <TouchableOpacity style={styles.btnNovo} onPress={() => setModalVisivel(true)}>
++        <TouchableOpacity style={styles.btnNovo} onPress={() => setModalCadastro(true)}>
+           <Text style={styles.btnNovoText}>+ Nova</Text>
+         </TouchableOpacity>
+       </View>
+ 
++      {/* Filtros */}
++      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtrosContainer}>
++        {(['todos', 'pendente', 'em_andamento', 'concluida'] as const).map(s => (
++          <TouchableOpacity
++            key={s}
++            style={[styles.filtroBtn, filtroStatus === s && styles.filtroBtnAtivo]}
++            onPress={() => setFiltroStatus(s)}
++          >
++            <Text style={[styles.filtroTexto, filtroStatus === s && styles.filtroTextoAtivo]}>
++              {s === 'todos' ? 'Todos' : STATUS_LABEL[s as StatusTarefa]}
++            </Text>
++          </TouchableOpacity>
++        ))}
++        {(['alta', 'media', 'baixa'] as PrioridadeTarefa[]).map(p => (
++          <TouchableOpacity
++            key={p}
++            style={[styles.filtroBtn, filtroPrioridade === p && { backgroundColor: PRIORIDADE_COR[p], borderColor: PRIORIDADE_COR[p] }]}
++            onPress={() => setFiltroPrioridade(prev => prev === p ? 'todos' : p)}
++          >
++            <Text style={[styles.filtroTexto, filtroPrioridade === p && { color: '#fff' }]}>
++              {p.charAt(0).toUpperCase() + p.slice(1)}
++            </Text>
++          </TouchableOpacity>
++        ))}
++      </ScrollView>
++
+       {loading && <ActivityIndicator color="#9b59b6" style={{ marginTop: 20 }} />}
+ 
+-      {!loading && tarefas.length === 0 && (
++      {!loading && tarefasFiltradas.length === 0 && (
+         <View style={styles.vazio}>
+-          <Text style={styles.vazioText}>Nenhuma tarefa cadastrada.</Text>
++          <Text style={styles.vazioText}>Nenhuma tarefa encontrada.</Text>
+         </View>
+       )}
+ 
+       <FlatList
+-        data={[...pendentes, ...concluidas]}
++        data={tarefasFiltradas}
+         keyExtractor={(item) => item.id_tarefa.toString()}
+         renderItem={renderTarefa}
+         contentContainerStyle={{ padding: 16, gap: 10 }}
+       />
+ 
+-      <Modal visible={modalVisivel} animationType="slide" transparent>
++      {/* Modal cadastro */}
++      <Modal visible={modalCadastro} animationType="slide" transparent>
+         <View style={styles.modalOverlay}>
+-          <View style={styles.modalContent}>
++          <ScrollView contentContainerStyle={styles.modalContent}>
+             <Text style={styles.modalTitulo}>Nova Tarefa</Text>
+-            <TextInput
+-              style={styles.input}
+-              placeholder="Descrição da tarefa"
+-              value={descricao}
+-              onChangeText={setDescricao}
+-              multiline
+-            />
+-            <TouchableOpacity style={styles.btnSalvar} onPress={() => presenter.handleCadastrar(descricao)} disabled={loading}>
++            <TextInput style={styles.input} placeholder="Descrição da tarefa *" value={descricao} onChangeText={setDescricao} multiline />
++            <TextInput style={styles.input} placeholder="Responsável" value={responsavel} onChangeText={setResponsavel} />
++            <TextInput style={styles.input} placeholder="Prazo (AAAA-MM-DD)" value={prazo} onChangeText={setPrazo} />
++            <Text style={styles.label}>Prioridade</Text>
++            <View style={styles.prioridadeContainer}>
++              {(['alta', 'media', 'baixa'] as PrioridadeTarefa[]).map(p => (
++                <TouchableOpacity
++                  key={p}
++                  style={[styles.prioridadeBtn, prioridade === p && { backgroundColor: PRIORIDADE_COR[p], borderColor: PRIORIDADE_COR[p] }]}
++                  onPress={() => setPrioridade(p)}
++                >
++                  <Text style={[styles.prioridadeBtnText, prioridade === p && { color: '#fff' }]}>
++                    {p.charAt(0).toUpperCase() + p.slice(1)}
++                  </Text>
++                </TouchableOpacity>
++              ))}
++            </View>
++            <TouchableOpacity style={styles.btnSalvar} onPress={() => presenter.handleCadastrar(descricao, prioridade, prazo, responsavel)} disabled={loading}>
+               {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnSalvarText}>Salvar</Text>}
+             </TouchableOpacity>
+-            <TouchableOpacity style={styles.btnCancelar} onPress={() => setModalVisivel(false)}>
++            <TouchableOpacity style={styles.btnCancelar} onPress={() => setModalCadastro(false)}>
+               <Text style={styles.btnCancelarText}>Cancelar</Text>
+             </TouchableOpacity>
+-          </View>
++          </ScrollView>
+         </View>
+       </Modal>
++
++      {/* Modal detalhe */}
++      {modalDetalhe && (
++        <Modal visible={!!modalDetalhe} animationType="slide" transparent>
++          <View style={styles.modalOverlay}>
++            <ScrollView contentContainerStyle={styles.modalContent}>
++              <Text style={styles.modalTitulo}>Detalhes da Tarefa</Text>
++              <Text style={styles.detalheLabel}>Descrição</Text>
++              <Text style={styles.detalheValor}>{modalDetalhe.descricao}</Text>
++              {modalDetalhe.responsavel && <>
++                <Text style={styles.detalheLabel}>Responsável</Text>
++                <Text style={styles.detalheValor}>{modalDetalhe.responsavel}</Text>
++              </>}
++              {modalDetalhe.prazo && <>
++                <Text style={styles.detalheLabel}>Prazo</Text>
++                <Text style={styles.detalheValor}>{modalDetalhe.prazo.split('-').reverse().join('/')}</Text>
++              </>}
++              <Text style={styles.detalheLabel}>Prioridade</Text>
++              <Text style={[styles.detalheValor, { color: PRIORIDADE_COR[modalDetalhe.prioridade] }]}>
++                {modalDetalhe.prioridade.charAt(0).toUpperCase() + modalDetalhe.prioridade.slice(1)}
++              </Text>
++              <Text style={styles.detalheLabel}>Alterar Status</Text>
++              <View style={styles.statusContainer}>
++                {PROXIMOS_STATUS[modalDetalhe.status].map(s => (
++                  <TouchableOpacity key={s} style={styles.statusBtn} onPress={() => presenter.handleAtualizarStatus(modalDetalhe.id_tarefa, s)}>
++                    <Text style={styles.statusBtnText}>→ {STATUS_LABEL[s]}</Text>
++                  </TouchableOpacity>
++                ))}
++              </View>
++              <TouchableOpacity style={styles.btnRemoverDetalhe} onPress={() => confirmarRemocao(modalDetalhe)}>
++                <Text style={styles.btnRemoverDetalheText}>Remover Tarefa</Text>
++              </TouchableOpacity>
++              <TouchableOpacity style={styles.btnCancelar} onPress={() => setModalDetalhe(null)}>
++                <Text style={styles.btnCancelarText}>Fechar</Text>
++              </TouchableOpacity>
++            </ScrollView>
++          </View>
++        </Modal>
++      )}
+     </View>
+   );
+ }
+@@ -111,21 +228,39 @@ const styles = StyleSheet.create({
+   titulo: { fontSize: 18, fontWeight: 'bold', color: '#fff' },
+   btnNovo: { backgroundColor: '#fff', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20 },
+   btnNovoText: { color: '#9b59b6', fontWeight: 'bold' },
+-  card: { backgroundColor: '#fff', borderRadius: 10, padding: 14, flexDirection: 'row', alignItems: 'center', elevation: 2 },
+-  cardConcluido: { opacity: 0.6 },
+-  checkbox: { marginRight: 10 },
+-  checkboxText: { fontSize: 20 },
+-  descricao: { flex: 1, fontSize: 15, color: '#333' },
++  filtrosContainer: { paddingHorizontal: 16, paddingVertical: 10, maxHeight: 52 },
++  filtroBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: '#ddd', marginRight: 8, backgroundColor: '#fff' },
++  filtroBtnAtivo: { backgroundColor: '#9b59b6', borderColor: '#9b59b6' },
++  filtroTexto: { fontSize: 12, color: '#666' },
++  filtroTextoAtivo: { color: '#fff' },
++  card: { backgroundColor: '#fff', borderRadius: 10, elevation: 2, flexDirection: 'row', overflow: 'hidden' },
++  prioridadeBarra: { width: 4 },
++  cardConteudo: { flex: 1, padding: 14 },
++  descricao: { fontSize: 15, color: '#333', marginBottom: 6 },
+   descricaoConcluida: { textDecorationLine: 'line-through', color: '#aaa' },
+-  btnRemover: { color: '#e74c3c', fontSize: 18, fontWeight: 'bold', paddingLeft: 8 },
++  cardRodape: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
++  infoTexto: { fontSize: 12, color: '#888' },
++  statusBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 },
++  statusTexto: { fontSize: 11, color: '#555' },
+   vazio: { flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 80 },
+   vazioText: { fontSize: 16, color: '#888' },
+   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+   modalContent: { backgroundColor: '#fff', padding: 24, borderTopLeftRadius: 20, borderTopRightRadius: 20 },
+   modalTitulo: { fontSize: 18, fontWeight: 'bold', color: '#9b59b6', marginBottom: 20 },
+-  input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 16, minHeight: 80 },
++  input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 16 },
++  label: { fontSize: 13, color: '#555', marginBottom: 8 },
++  prioridadeContainer: { flexDirection: 'row', gap: 10, marginBottom: 20 },
++  prioridadeBtn: { flex: 1, padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#ddd', alignItems: 'center' },
++  prioridadeBtnText: { fontSize: 13, color: '#555', fontWeight: '600' },
++  statusContainer: { gap: 8, marginBottom: 16 },
++  statusBtn: { padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#9b59b6', alignItems: 'center' },
++  statusBtnText: { color: '#9b59b6', fontWeight: '600' },
++  detalheLabel: { fontSize: 12, color: '#888', marginTop: 12, marginBottom: 2, textTransform: 'uppercase' },
++  detalheValor: { fontSize: 16, color: '#333', fontWeight: '500' },
+   btnSalvar: { backgroundColor: '#9b59b6', padding: 14, borderRadius: 8, alignItems: 'center', marginBottom: 10 },
+   btnSalvarText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+   btnCancelar: { padding: 14, alignItems: 'center' },
+   btnCancelarText: { color: '#888', fontSize: 16 },
++  btnRemoverDetalhe: { padding: 14, borderRadius: 8, borderWidth: 1, borderColor: '#e74c3c', alignItems: 'center', marginBottom: 10 },
++  btnRemoverDetalheText: { color: '#e74c3c', fontWeight: 'bold' },
+ });

@@ -21,7 +21,14 @@ export class TarefaSupabaseRepository implements TarefaRepository {
   async create(data: Tarefa): Promise<Tarefa> {
     const { data: nova } = await supabase
       .from('tarefa')
-      .insert({ id_evento: data.id_evento, descricao: data.descricao, status: data.status })
+      .insert({
+        id_evento: data.id_evento,
+        descricao: data.descricao,
+        status: data.status,
+        prioridade: data.prioridade,
+        prazo: data.prazo ?? null,
+        responsavel: data.responsavel ?? null,
+      })
       .select().single();
     return nova!;
   }

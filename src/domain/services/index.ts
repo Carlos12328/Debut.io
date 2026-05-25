@@ -1,5 +1,5 @@
-import { Usuario, PerfilUsuario, Evento, Fornecedor } from '../models';
-import { UsuarioRepository, EventoRepository, FornecedorRepository } from '../../persistence/repositories';
+import { Usuario, PerfilUsuario, Evento, Fornecedor, Pagamento, StatusPagamento, Tarefa, StatusTarefa, PrioridadeTarefa, Compromisso } from '../models';
+import { UsuarioRepository, EventoRepository, FornecedorRepository, PagamentoRepository, TarefaRepository, CompromissoRepository } from '../../persistence/repositories';
 
 // ─── Auth ────────────────────────────────────────────────
 export interface AuthService {
@@ -59,21 +59,10 @@ export class CadastroServiceImpl implements CadastroService {
     if (senha.length < 6) throw new Error('A senha deve ter pelo menos 6 caracteres.');
     const existente = await this.usuarioRepository.getByEmail(email);
     if (existente) throw new Error('Já existe uma conta com este e-mail.');
-
     const novoUsuario: Usuario = {
-      id_usuario: 0,
-      nome,
-      email,
-      senha_hash: senha,
-      perfil,
-      cpf,
-      data_nascimento,
-      endereco_logradouro,
-      endereco_numero,
-      endereco_bairro,
-      endereco_cidade,
-      endereco_estado,
-      endereco_cep,
+      id_usuario: 0, nome, email, senha_hash: senha, perfil, cpf,
+      data_nascimento, endereco_logradouro, endereco_numero,
+      endereco_bairro, endereco_cidade, endereco_estado, endereco_cep,
     };
     return await this.usuarioRepository.create(novoUsuario);
   }
@@ -94,14 +83,10 @@ export class EventoServiceImpl implements EventoService {
     if (!nome) throw new Error('O nome do evento é obrigatório.');
     if (!data_evento) throw new Error('A data do evento é obrigatória.');
     if (orcamento <= 0) throw new Error('O orçamento deve ser maior que zero.');
-
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
     const dataInformada = new Date(data_evento);
-    if (dataInformada < hoje) {
-      throw new Error('A data do evento não pode ser uma data passada.');
-    }
-
+    if (dataInformada < hoje) throw new Error('A data do evento não pode ser uma data passada.');
     const novoEvento: Evento = { id_evento: 0, id_usuario, nome, data_evento, orcamento, status: 'ativo' };
     return await this.eventoRepository.create(novoEvento);
   }
@@ -110,41 +95,30 @@ export class EventoServiceImpl implements EventoService {
     return await this.eventoRepository.getByUsuario(id_usuario);
   }
 
-async editar(id_evento: number, nome: string, data_evento: string, orcamento: number): Promise<Evento> {
-  if (!nome) throw new Error('O nome do evento e obrigatorio.');
-  if (!data_evento) throw new Error('A data do evento e obrigatoria.');
-  if (orcamento <= 0) throw new Error('O orcamento deve ser maior que zero.');
-
-  const hoje = new Date();
-  hoje.setHours(0, 0, 0, 0);
-  const dataInformada = new Date(data_evento);
-  if (dataInformada < hoje) {
-    throw new Error('A data do evento nao pode ser uma data passada.');
+  async editar(id_evento: number, nome: string, data_evento: string, orcamento: number): Promise<Evento> {
+    if (!nome) throw new Error('O nome do evento e obrigatorio.');
+    if (!data_evento) throw new Error('A data do evento e obrigatoria.');
+    if (orcamento <= 0) throw new Error('O orcamento deve ser maior que zero.');
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    const dataInformada = new Date(data_evento);
+    if (dataInformada < hoje) throw new Error('A data do evento nao pode ser uma data passada.');
+    return await this.eventoRepository.update(id_evento, { nome, data_evento, orcamento });
   }
 
-  return await this.eventoRepository.update(id_evento, { nome, data_evento, orcamento });
+  async encerrar(id_evento: number): Promise<Evento> {
+    return await this.eventoRepository.update(id_evento, { status: 'encerrado' });
+  }
 }
 
-async encerrar(id_evento: number): Promise<Evento> {
-  return await this.eventoRepository.update(id_evento, { status: 'encerrado' });
-}
-}
 // ─── Fornecedor ──────────────────────────────────────────
-  export interface FornecedorService {
+export interface FornecedorService {
   cadastrar(
-    id_evento: number,
-    nome: string,
-    tipo_servico: string,
-    valor: number,
-    cnpj?: string,
-    telefone?: string,
-    email?: string,
-    endereco_logradouro?: string,
-    endereco_numero?: string,
-    endereco_bairro?: string,
-    endereco_cidade?: string,
-    endereco_estado?: string,
-    endereco_cep?: string,
+    id_evento: number, nome: string, tipo_servico: string, valor: number,
+    cnpj?: string, telefone?: string, email?: string,
+    endereco_logradouro?: string, endereco_numero?: string,
+    endereco_bairro?: string, endereco_cidade?: string,
+    endereco_estado?: string, endereco_cep?: string,
   ): Promise<Fornecedor>;
   listar(id_evento: number): Promise<Fornecedor[]>;
   remover(id_fornecedor: number): Promise<void>;
@@ -154,39 +128,19 @@ export class FornecedorServiceImpl implements FornecedorService {
   constructor(private readonly fornecedorRepository: FornecedorRepository) { }
 
   async cadastrar(
-    id_evento: number,
-    nome: string,
-    tipo_servico: string,
-    valor: number,
-    cnpj?: string,
-    telefone?: string,
-    email?: string,
-    endereco_logradouro?: string,
-    endereco_numero?: string,
-    endereco_bairro?: string,
-    endereco_cidade?: string,
-    endereco_estado?: string,
-    endereco_cep?: string,
+    id_evento: number, nome: string, tipo_servico: string, valor: number,
+    cnpj?: string, telefone?: string, email?: string,
+    endereco_logradouro?: string, endereco_numero?: string,
+    endereco_bairro?: string, endereco_cidade?: string,
+    endereco_estado?: string, endereco_cep?: string,
   ): Promise<Fornecedor> {
     if (!nome) throw new Error('O nome do fornecedor é obrigatório.');
     if (!tipo_servico) throw new Error('O tipo de serviço é obrigatório.');
     if (valor <= 0) throw new Error('O valor deve ser maior que zero.');
-
     const novo: Fornecedor = {
-      id_fornecedor: 0,
-      id_evento,
-      nome,
-      tipo_servico,
-      valor,
-      cnpj,
-      telefone,
-      email,
-      endereco_logradouro,
-      endereco_numero,
-      endereco_bairro,
-      endereco_cidade,
-      endereco_estado,
-      endereco_cep,
+      id_fornecedor: 0, id_evento, nome, tipo_servico, valor,
+      cnpj, telefone, email, endereco_logradouro, endereco_numero,
+      endereco_bairro, endereco_cidade, endereco_estado, endereco_cep,
     };
     return await this.fornecedorRepository.create(novo);
   }
@@ -200,11 +154,7 @@ export class FornecedorServiceImpl implements FornecedorService {
   }
 }
 
-
 // ─── Pagamento ───────────────────────────────────────────
-import { Pagamento, StatusPagamento, Tarefa, StatusTarefa, Compromisso } from '../models';
-import { PagamentoRepository, TarefaRepository, CompromissoRepository } from '../../persistence/repositories';
-
 export interface PagamentoService {
   cadastrar(id_fornecedor: number, valor: number, vencimento: string): Promise<Pagamento>;
   listarPorEvento(id_evento: number): Promise<Pagamento[]>;
@@ -237,18 +187,18 @@ export class PagamentoServiceImpl implements PagamentoService {
 
 // ─── Tarefa ──────────────────────────────────────────────
 export interface TarefaService {
-  cadastrar(id_evento: number, descricao: string): Promise<Tarefa>;
+  cadastrar(id_evento: number, descricao: string, prioridade: PrioridadeTarefa, prazo?: string, responsavel?: string): Promise<Tarefa>;
   listar(id_evento: number): Promise<Tarefa[]>;
-  concluir(id_tarefa: number): Promise<Tarefa>;
+  atualizarStatus(id_tarefa: number, status: StatusTarefa): Promise<Tarefa>;
   remover(id_tarefa: number): Promise<void>;
 }
 
 export class TarefaServiceImpl implements TarefaService {
   constructor(private readonly tarefaRepository: TarefaRepository) {}
 
-  async cadastrar(id_evento: number, descricao: string): Promise<Tarefa> {
+  async cadastrar(id_evento: number, descricao: string, prioridade: PrioridadeTarefa, prazo?: string, responsavel?: string): Promise<Tarefa> {
     if (!descricao) throw new Error('A descrição da tarefa é obrigatória.');
-    const nova: Tarefa = { id_tarefa: 0, id_evento, descricao, status: 'pendente' };
+    const nova: Tarefa = { id_tarefa: 0, id_evento, descricao, status: 'pendente', prioridade, prazo, responsavel };
     return await this.tarefaRepository.create(nova);
   }
 
@@ -256,8 +206,8 @@ export class TarefaServiceImpl implements TarefaService {
     return await this.tarefaRepository.getByEvento(id_evento);
   }
 
-  async concluir(id_tarefa: number): Promise<Tarefa> {
-    return await this.tarefaRepository.update(id_tarefa, { status: 'concluida' });
+  async atualizarStatus(id_tarefa: number, status: StatusTarefa): Promise<Tarefa> {
+    return await this.tarefaRepository.update(id_tarefa, { status });
   }
 
   async remover(id_tarefa: number): Promise<void> {
