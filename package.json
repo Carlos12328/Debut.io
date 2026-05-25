@@ -7,7 +7,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "web-supabase": "expo start --web & node server.js"
+    "web-supabase": "concurrently \"expo start --web\" \"node server.js\""
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.1",
@@ -25,6 +25,7 @@
   "devDependencies": {
     "@types/react": "~19.1.0",
     "@types/react-native": "^0.72.8",
+    "concurrently": "^9.2.1",
     "http-proxy": "^1.18.1",
     "typescript": "~5.9.2"
   },
