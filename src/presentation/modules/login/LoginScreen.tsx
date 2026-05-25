@@ -8,14 +8,22 @@ import { Usuario } from '../../../domain/models';
 interface Props {
   onLoginSuccess: (usuario: Usuario) => void;
   onIrParaCadastro: () => void;
+  onIrParaRecuperacao: () => void;
 }
 
-export function LoginScreen({ onLoginSuccess, onIrParaCadastro }: Props) {
+export function LoginScreen({ onLoginSuccess, onIrParaCadastro, onIrParaRecuperacao }: Props) {
   const presenter = useMemo(() => {
     const repo = new UsuarioSupabaseRepository();
     const service = new AuthServiceImpl(repo);
     return new LoginPresenter(service);
   }, []);
 
-  return <LoginView presenter={presenter} onLoginSuccess={onLoginSuccess} onIrParaCadastro={onIrParaCadastro} />;
+  return (
+    <LoginView
+      presenter={presenter}
+      onLoginSuccess={onLoginSuccess}
+      onIrParaCadastro={onIrParaCadastro}
+      onIrParaRecuperacao={onIrParaRecuperacao}
+    />
+  );
 }

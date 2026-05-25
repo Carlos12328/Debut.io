@@ -8,9 +8,10 @@ interface Props {
   presenter: LoginPresenter;
   onLoginSuccess: (usuario: Usuario) => void;
   onIrParaCadastro: () => void;
+  onIrParaRecuperacao: () => void;
 }
 
-export function LoginView({ presenter, onLoginSuccess, onIrParaCadastro }: Props) {
+export function LoginView({ presenter, onLoginSuccess, onIrParaCadastro, onIrParaRecuperacao }: Props) {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
@@ -48,6 +49,10 @@ export function LoginView({ presenter, onLoginSuccess, onIrParaCadastro }: Props
           secureTextEntry
         />
 
+        <TouchableOpacity onPress={onIrParaRecuperacao} style={styles.esqueceuContainer}>
+          <Text style={styles.esqueceuLink}>Esqueceu a senha?</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity
           style={styles.button}
           onPress={() => presenter.handleLogin(email, senha)}
@@ -72,6 +77,8 @@ const styles = StyleSheet.create({
   title: { fontSize: 32, fontWeight: 'bold', color: '#9b59b6', textAlign: 'center', marginBottom: 4 },
   subtitle: { fontSize: 16, color: '#888', textAlign: 'center', marginBottom: 32 },
   input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 16 },
+  esqueceuContainer: { alignItems: 'flex-end', marginBottom: 16, marginTop: -8 },
+  esqueceuLink: { color: '#9b59b6', fontSize: 13 },
   button: { backgroundColor: '#9b59b6', padding: 14, borderRadius: 8, alignItems: 'center' },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   linkContainer: { alignItems: 'center', marginTop: 16 },

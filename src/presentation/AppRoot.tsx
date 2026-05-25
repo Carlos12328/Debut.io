@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { LoginScreen } from './modules/login/LoginScreen';
 import { CadastroScreen } from './modules/cadastro/CadastroScreen';
+import { RecuperacaoSenhaScreen } from './modules/recuperacao-senha/RecuperacaoSenhaScreen';
 import { EventoScreen } from './modules/eventos/EventoScreen';
 import { MainScreen } from './modules/main/MainScreen';
 import { Usuario, Evento } from '../domain/models';
 import { getDatabase } from '../persistence/db';
 
-type Tela = 'login' | 'cadastro' | 'eventos' | 'main';
+type Tela = 'login' | 'cadastro' | 'recuperar-senha' | 'eventos' | 'main';
 
 export default function AppRoot() {
   const [telaAtual, setTelaAtual] = useState<Tela>('login');
@@ -41,10 +42,18 @@ export default function AppRoot() {
         />
       );
     }
+    if (telaAtual === 'recuperar-senha') {
+      return (
+        <RecuperacaoSenhaScreen
+          onVoltarLogin={() => setTelaAtual('login')}
+        />
+      );
+    }
     return (
       <LoginScreen
         onLoginSuccess={(u) => { setUsuarioLogado(u); setTelaAtual('eventos'); }}
         onIrParaCadastro={() => setTelaAtual('cadastro')}
+        onIrParaRecuperacao={() => setTelaAtual('recuperar-senha')}
       />
     );
   }
