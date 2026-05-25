@@ -1,11 +1,6 @@
 import {
-  EntityId,
-  Compromisso,
-  Evento,
-  Pagamento,
-  Fornecedor,
-  Tarefa,
-  Usuario,
+  EntityId, Compromisso, Evento, Pagamento,
+  Fornecedor, Tarefa, Usuario,
 } from '../../domain/models';
 
 export interface Repository<T> {
@@ -28,6 +23,15 @@ export interface FornecedorRepository extends Repository<Fornecedor> {
   getByEvento(id_evento: EntityId): Promise<Fornecedor[]>;
 }
 
-export interface PagamentoRepository extends Repository<Pagamento> {}
-export interface TarefaRepository extends Repository<Tarefa> {}
-export interface CompromissoRepository extends Repository<Compromisso> {}
+export interface PagamentoRepository extends Repository<Pagamento> {
+  getByFornecedor(id_fornecedor: EntityId): Promise<Pagamento[]>;
+  getByEvento(id_evento: EntityId): Promise<Pagamento[]>;
+}
+
+export interface TarefaRepository extends Repository<Tarefa> {
+  getByEvento(id_evento: EntityId): Promise<Tarefa[]>;
+}
+
+export interface CompromissoRepository extends Repository<Compromisso> {
+  getByEvento(id_evento: EntityId): Promise<Compromisso[]>;
+}

@@ -200,3 +200,93 @@ export class FornecedorServiceImpl implements FornecedorService {
   }
 }
 
+
+// ─── Pagamento ───────────────────────────────────────────
+import { Pagamento, StatusPagamento, Tarefa, StatusTarefa, Compromisso } from '../models';
+import { PagamentoRepository, TarefaRepository, CompromissoRepository } from '../../persistence/repositories';
+
+export interface PagamentoService {
+  cadastrar(id_fornecedor: number, valor: number, vencimento: string): Promise<Pagamento>;
+  listarPorEvento(id_evento: number): Promise<Pagamento[]>;
+  marcarComoPago(id_pagamento: number): Promise<Pagamento>;
+  remover(id_pagamento: number): Promise<void>;
+}
+
+export class PagamentoServiceImpl implements PagamentoService {
+  constructor(private readonly pagamentoRepository: PagamentoRepository) {}
+
+  async cadastrar(id_fornecedor: number, valor: number, vencimento: string): Promise<Pagamento> {
+    if (valor <= 0) throw new Error('O valor deve ser maior que zero.');
+    if (!vencimento) throw new Error('A data de vencimento é obrigatória.');
+    const novo: Pagamento = { id_pagamento: 0, id_fornecedor, valor, vencimento, status: 'pendente' };
+    return await this.pagamentoRepository.create(novo);
+  }
+
+  async listarPorEvento(id_evento: number): Promise<Pagamento[]> {
+    return await this.pagamentoRepository.getByEvento(id_evento);
+  }
+
+  async marcarComoPago(id_pagamento: number): Promise<Pagamento> {
+    return await this.pagamentoRepository.update(id_pagamento, { status: 'pago' });
+  }
+
+  async remover(id_pagamento: number): Promise<void> {
+    return await this.pagamentoRepository.remove(id_pagamento);
+  }
+}
+
+// ─── Tarefa ──────────────────────────────────────────────
+export interface TarefaService {
+  cadastrar(id_evento: number, descricao: string): Promise<Tarefa>;
+  listar(id_evento: number): Promise<Tarefa[]>;
+  concluir(id_tarefa: number): Promise<Tarefa>;
+  remover(id_tarefa: number): Promise<void>;
+}
+
+export class TarefaServiceImpl implements TarefaService {
+  constructor(private readonly tarefaRepository: TarefaRepository) {}
+
+  async cadastrar(id_evento: number, descricao: string): Promise<Tarefa> {
+    if (!descricao) throw new Error('A descrição da tarefa é obrigatória.');
+    const nova: Tarefa = { id_tarefa: 0, id_evento, descricao, status: 'pendente' };
+    return await this.tarefaRepository.create(nova);
+  }
+
+  async listar(id_evento: number): Promise<Tarefa[]> {
+    return await this.tarefaRepository.getByEvento(id_evento);
+  }
+
+  async concluir(id_tarefa: number): Promise<Tarefa> {
+    return await this.tarefaRepository.update(id_tarefa, { status: 'concluida' });
+  }
+
+  async remover(id_tarefa: number): Promise<void> {
+    return await this.tarefaRepository.remove(id_tarefa);
+  }
+}
+
+// ─── Compromisso ─────────────────────────────────────────
+export interface CompromissoService {
+  cadastrar(id_evento: number, descricao: string, data_compromisso: string): Promise<Compromisso>;
+  listar(id_evento: number): Promise<Compromisso[]>;
+  remover(id_compromisso: number): Promise<void>;
+}
+
+export class CompromissoServiceImpl implements CompromissoService {
+  constructor(private readonly compromissoRepository: CompromissoRepository) {}
+
+  async cadastrar(id_evento: number, descricao: string, data_compromisso: string): Promise<Compromisso> {
+    if (!descricao) throw new Error('A descrição é obrigatória.');
+    if (!data_compromisso) throw new Error('A data do compromisso é obrigatória.');
+    const novo: Compromisso = { id_compromisso: 0, id_evento, descricao, data_compromisso };
+    return await this.compromissoRepository.create(novo);
+  }
+
+  async listar(id_evento: number): Promise<Compromisso[]> {
+    return await this.compromissoRepository.getByEvento(id_evento);
+  }
+
+  async remover(id_compromisso: number): Promise<void> {
+    return await this.compromissoRepository.remove(id_compromisso);
+  }
+}

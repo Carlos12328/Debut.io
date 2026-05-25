@@ -1,20 +1,18 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useMemo } from 'react';
+import { CompromissoView } from '../../mvp/views/CompromissoView';
+import { CompromissoPresenter } from '../../mvp/presenters/CompromissoPresenter';
+import { CompromissoServiceImpl } from '../../../domain/services';
+import { CompromissoSupabaseRepository } from '../../../persistence/repositories/CompromissoSupabaseRepository';
 import { Evento } from '../../../domain/models';
 
 interface Props { evento: Evento; }
 
 export function AgendaScreen({ evento }: Props) {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.texto}>📅 Módulo de Agenda</Text>
-      <Text style={styles.sub}>Em desenvolvimento...</Text>
-    </View>
-  );
-}
+  const presenter = useMemo(() => {
+    const repo = new CompromissoSupabaseRepository();
+    const service = new CompromissoServiceImpl(repo);
+    return new CompromissoPresenter(service, evento.id_evento);
+  }, [evento.id_evento]);
 
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f5f5f5' },
-  texto: { fontSize: 20, fontWeight: 'bold', color: '#9b59b6' },
-  sub: { fontSize: 14, color: '#888', marginTop: 8 },
-});
+  return <CompromissoView presenter={presenter} />;
+}
