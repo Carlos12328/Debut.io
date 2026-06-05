@@ -1,1 +1,4 @@
-export type Controller<Request, Response> = (request: Request) => Promise<Response>;
+﻿export * from './UsuarioController';
+export * from './EventoController';
+export * from './FornecedorController';
+export * from './PagamentoController';
