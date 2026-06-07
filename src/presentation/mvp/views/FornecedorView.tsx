@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, FlatList, Modal, ScrollView, } from 'react-native';
 import { FornecedorPresenter, FornecedorView as IFornecedorView } from '../presenters/FornecedorPresenter';
 import { Fornecedor } from '../../../domain/models';
@@ -140,7 +140,7 @@ export function FornecedorView({ presenter, nomeEvento, onVoltar }: Props) {
 
       <Modal visible={modalVisivel} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
-          <ScrollView contentContainerStyle={styles.modalContent}>
+          <ScrollView contentContainerStyle={{ paddingTop: 60, paddingHorizontal: 20, paddingBottom: 40 }} style={{ backgroundColor: '#FFF' }}>
 
             <Text style={styles.modalTitulo}>Novo Fornecedor</Text>
 
@@ -274,7 +274,7 @@ export function FornecedorView({ presenter, nomeEvento, onVoltar }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  container: { paddingTop: 55,  flex: 1, backgroundColor: '#f5f5f5' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, backgroundColor: '#9b59b6' },
   btnVoltar: { color: '#fff', fontSize: 14 },
   titulo: { flex: 1, fontSize: 16, fontWeight: 'bold', color: '#fff', textAlign: 'center', marginHorizontal: 8 },

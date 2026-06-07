@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Evento, Usuario } from '../../../domain/models';
@@ -41,15 +41,7 @@ export function MainScreen({ usuario, evento, onVoltarEventos }: Props) {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
 
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onVoltarEventos} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Text style={styles.btnVoltar}>Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitulo} numberOfLines={1}>{evento.nome}</Text>
-        <Text style={styles.headerPerfil}>
-          {usuario.perfil === 'familiar' ? 'Familiar' : 'Cerimonialista'}
-        </Text>
-      </View>
+      {/* Cabeçalho redundante removido para evitar duplicação */}
 
       <View style={styles.conteudo}>
         {renderConteudo()}
