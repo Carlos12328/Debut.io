@@ -2,6 +2,8 @@
 export * from './eventoRoutes';
 export * from './fornecedorRoutes';
 export * from './pagamentoRoutes';
+export * from './tarefaRoutes';
+export * from './compromissoRoutes';
 
 export const routes = {
   users:        '/users',

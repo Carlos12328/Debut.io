@@ -80,7 +80,7 @@ export function TarefaView({ presenter }: Props) {
 
   const renderTarefa = ({ item }: { item: Tarefa }) => (
     <TouchableOpacity style={styles.card} onPress={() => setModalDetalhe(item)}>
-      <View style={[styles.prioridadeBarra, { backgroundColor: PRIORIDADE_COR[item.prioridade] }]} />
+      <View style={[styles.prioridadeBarra, { backgroundColor: PRIORIDADE_COR[item.prioridade ?? 'media'] }]} />
       <View style={styles.cardConteudo}>
         <Text style={[styles.descricao, item.status === 'concluida' && styles.descricaoConcluida]}>
           {item.descricao}
@@ -197,8 +197,8 @@ export function TarefaView({ presenter }: Props) {
                 <Text style={styles.detalheValor}>{modalDetalhe.prazo.split('-').reverse().join('/')}</Text>
               </>}
               <Text style={styles.detalheLabel}>Prioridade</Text>
-              <Text style={[styles.detalheValor, { color: PRIORIDADE_COR[modalDetalhe.prioridade] }]}>
-                {modalDetalhe.prioridade.charAt(0).toUpperCase() + modalDetalhe.prioridade.slice(1)}
+              <Text style={[styles.detalheValor, { color: PRIORIDADE_COR[modalDetalhe.prioridade ?? 'media'] }]}>
+                {(modalDetalhe.prioridade ?? 'media').charAt(0).toUpperCase() + (modalDetalhe.prioridade ?? 'media').slice(1)}
               </Text>
               <Text style={styles.detalheLabel}>Alterar Status</Text>
               <View style={styles.statusContainer}>
