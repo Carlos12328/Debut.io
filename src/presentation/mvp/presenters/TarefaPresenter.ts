@@ -1,29 +1,43 @@
 import { TarefaController } from '../../../application/api/controllers/TarefaController';
-import {
-  Tarefa,
-  StatusTarefa,
-  PrioridadeTarefa,
-} from '../../../domain/models';
+import { Tarefa,StatusTarefa,PrioridadeTarefa } from '../../../domain/models';
+import { TarefaViewModel } from '../models/TarefaViewModel';
 
 export interface TarefaView {
   showLoading(): void;
   hideLoading(): void;
   showError(message: string): void;
-  onTarefasCarregadas(tarefas: Tarefa[]): void;
-  onTarefaCadastrada(tarefa: Tarefa): void;
-  onTarefaAtualizada(tarefa: Tarefa): void;
-  onTarefaRemovida(id: number): void;
+
+  onTarefasCarregadas(
+    tarefas: TarefaViewModel[],
+  ): void;
+
+  onTarefaCadastrada(
+    tarefa: TarefaViewModel,
+  ): void;
+
+  onTarefaAtualizada(
+    tarefa: TarefaViewModel,
+  ): void;
+
+  onTarefaRemovida(
+    id: number,
+  ): void;
 }
 
 export class TarefaPresenter {
-  private view: TarefaView | null = null;
+  private view: TarefaView | null =
+    null;
 
   constructor(
-    private readonly tarefaController: TarefaController,
-    private readonly id_evento: number,
+    private readonly tarefaController:
+      TarefaController,
+    private readonly id_evento:
+      number,
   ) {}
 
-  attachView(view: TarefaView) {
+  attachView(
+    view: TarefaView,
+  ) {
     this.view = view;
   }
 
@@ -38,21 +52,31 @@ export class TarefaPresenter {
 
     try {
       const response =
-        await this.tarefaController.listar(
-          this.id_evento,
-        );
+        await this.tarefaController
+          .listar(this.id_evento);
 
       if (!response.sucesso) {
-        throw new Error(response.erro);
+        throw new Error(
+          response.erro,
+        );
       }
 
-      this.view.onTarefasCarregadas(
-        response.dados ?? [],
-      );
+      const tarefas =
+        (response.dados ?? []).map(
+          tarefa =>
+            this.toViewModel(
+              tarefa,
+            ),
+        );
+
+      this.view
+        .onTarefasCarregadas(
+          tarefas,
+        );
     } catch (e: any) {
       this.view.showError(
         e.message ??
-        'Erro ao carregar tarefas.',
+          'Erro ao carregar tarefas.',
       );
     } finally {
       this.view.hideLoading();
@@ -61,7 +85,8 @@ export class TarefaPresenter {
 
   async handleCadastrar(
     descricao: string,
-    prioridade: PrioridadeTarefa,
+    prioridade:
+      PrioridadeTarefa,
     prazo: string,
     responsavel: string,
   ) {
@@ -71,25 +96,32 @@ export class TarefaPresenter {
 
     try {
       const response =
-        await this.tarefaController.cadastrar(
-          this.id_evento,
-          descricao,
-          prioridade,
-          prazo || undefined,
-          responsavel || undefined,
-        );
+        await this.tarefaController
+          .cadastrar(
+            this.id_evento,
+            descricao,
+            prioridade,
+            prazo || undefined,
+            responsavel ||
+              undefined,
+          );
 
       if (!response.sucesso) {
-        throw new Error(response.erro);
+        throw new Error(
+          response.erro,
+        );
       }
 
-      this.view.onTarefaCadastrada(
-        response.dados!,
-      );
+      this.view
+        .onTarefaCadastrada(
+          this.toViewModel(
+            response.dados!,
+          ),
+        );
     } catch (e: any) {
       this.view.showError(
         e.message ??
-        'Erro ao cadastrar tarefa.',
+          'Erro ao cadastrar tarefa.',
       );
     } finally {
       this.view.hideLoading();
@@ -111,16 +143,21 @@ export class TarefaPresenter {
           );
 
       if (!response.sucesso) {
-        throw new Error(response.erro);
+        throw new Error(
+          response.erro,
+        );
       }
 
-      this.view.onTarefaAtualizada(
-        response.dados!,
-      );
+      this.view
+        .onTarefaAtualizada(
+          this.toViewModel(
+            response.dados!,
+          ),
+        );
     } catch (e: any) {
       this.view.showError(
         e.message ??
-        'Erro ao atualizar status.',
+          'Erro ao atualizar status.',
       );
     }
   }
@@ -136,17 +173,102 @@ export class TarefaPresenter {
           .remover(id_tarefa);
 
       if (!response.sucesso) {
-        throw new Error(response.erro);
+        throw new Error(
+          response.erro,
+        );
       }
 
-      this.view.onTarefaRemovida(
-        id_tarefa,
-      );
+      this.view
+        .onTarefaRemovida(
+          id_tarefa,
+        );
     } catch (e: any) {
       this.view.showError(
         e.message ??
-        'Erro ao remover tarefa.',
+          'Erro ao remover tarefa.',
       );
     }
+  }
+
+  private toViewModel(
+    tarefa: Tarefa,
+  ): TarefaViewModel {
+    return {
+      id: tarefa.id_tarefa,
+      idEvento:
+        tarefa.id_evento,
+      descricao:
+        tarefa.descricao,
+
+      status:
+        tarefa.status,
+
+      statusLabel:
+        this.getStatusLabel(
+          tarefa.status,
+        ),
+
+      prioridade:
+        tarefa.prioridade ??
+        'media',
+
+      prioridadeLabel:
+        this.getPrioridadeLabel(
+          tarefa.prioridade ??
+            'media',
+        ),
+
+      prazo: tarefa.prazo,
+
+      prazoFormatado:
+        tarefa.prazo
+          ? new Date(
+              tarefa.prazo,
+            ).toLocaleDateString(
+              'pt-BR',
+            )
+          : undefined,
+
+      responsavel:
+        tarefa.responsavel,
+
+      atrasada:
+        !!tarefa.prazo &&
+        new Date(
+          tarefa.prazo,
+        ) < new Date() &&
+        tarefa.status !==
+          'concluida',
+    };
+  }
+
+  private getStatusLabel(
+    status: StatusTarefa,
+  ): string {
+    const labels = {
+      pendente:
+        'Pendente',
+      em_andamento:
+        'Em andamento',
+      concluida:
+        'Concluída',
+    };
+
+    return labels[status];
+  }
+
+  private getPrioridadeLabel(
+    prioridade:
+      PrioridadeTarefa,
+  ): string {
+    const labels = {
+      alta: 'Alta',
+      media: 'Média',
+      baixa: 'Baixa',
+    };
+
+    return labels[
+      prioridade
+    ];
   }
 }

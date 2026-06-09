@@ -4,7 +4,12 @@ import {
   ActivityIndicator, Alert, FlatList, Modal, ScrollView,
 } from 'react-native';
 import { TarefaPresenter, TarefaView as ITarefaView } from '../presenters/TarefaPresenter';
-import { Tarefa, StatusTarefa, PrioridadeTarefa } from '../../../domain/models';
+import {
+  StatusTarefa,
+  PrioridadeTarefa,
+} from '../../../domain/models';
+
+import { TarefaViewModel } from '../models/TarefaViewModel';
 
 interface Props {
   presenter: TarefaPresenter;
@@ -16,12 +21,6 @@ const PRIORIDADE_COR: Record<PrioridadeTarefa, string> = {
   baixa: '#27ae60',
 };
 
-const STATUS_LABEL: Record<StatusTarefa, string> = {
-  pendente: 'Pendente',
-  em_andamento: 'Em andamento',
-  concluida: 'Concluída',
-};
-
 const PROXIMOS_STATUS: Record<StatusTarefa, StatusTarefa[]> = {
   pendente: ['em_andamento', 'concluida'],
   em_andamento: ['pendente', 'concluida'],
@@ -29,10 +28,10 @@ const PROXIMOS_STATUS: Record<StatusTarefa, StatusTarefa[]> = {
 };
 
 export function TarefaView({ presenter }: Props) {
-  const [tarefas, setTarefas] = useState<Tarefa[]>([]);
+  const [tarefas, setTarefas] = useState<TarefaViewModel[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalCadastro, setModalCadastro] = useState(false);
-  const [modalDetalhe, setModalDetalhe] = useState<Tarefa | null>(null);
+  const [modalDetalhe, setModalDetalhe] = useState<TarefaViewModel | null>(null);
   const [filtroStatus, setFiltroStatus] = useState<StatusTarefa | 'todos'>('todos');
   const [filtroPrioridade, setFiltroPrioridade] = useState<PrioridadeTarefa | 'todos'>('todos');
   const [descricao, setDescricao] = useState('');
@@ -52,11 +51,11 @@ export function TarefaView({ presenter }: Props) {
         setDescricao(''); setPrazo(''); setResponsavel(''); setPrioridade('media');
       },
       onTarefaAtualizada: (t) => {
-        setTarefas(prev => prev.map(x => x.id_tarefa === t.id_tarefa ? t : x));
+        setTarefas(prev => prev.map(x => x.id === t.id ? t : x));
         setModalDetalhe(t);
       },
       onTarefaRemovida: (id) => {
-        setTarefas(prev => prev.filter(t => t.id_tarefa !== id));
+        setTarefas(prev => prev.filter(t => t.id !== id));
         setModalDetalhe(null);
       },
     };
@@ -71,14 +70,14 @@ export function TarefaView({ presenter }: Props) {
     return true;
   });
 
-  const confirmarRemocao = (t: Tarefa) => {
+  const confirmarRemocao = (t: TarefaViewModel) => {
     Alert.alert('Remover', `Remover "${t.descricao}"?`, [
       { text: 'Cancelar', style: 'cancel' },
-      { text: 'Remover', style: 'destructive', onPress: () => presenter.handleRemover(t.id_tarefa) },
+      { text: 'Remover', style: 'destructive', onPress: () => presenter.handleRemover(t.id) },
     ]);
   };
 
-  const renderTarefa = ({ item }: { item: Tarefa }) => (
+  const renderTarefa = ({ item }: { item: TarefaViewModel }) => (
     <TouchableOpacity style={styles.card} onPress={() => setModalDetalhe(item)}>
       <View style={[styles.prioridadeBarra, { backgroundColor: PRIORIDADE_COR[item.prioridade ?? 'media'] }]} />
       <View style={styles.cardConteudo}>
@@ -86,12 +85,12 @@ export function TarefaView({ presenter }: Props) {
           {item.descricao}
         </Text>
         <View style={styles.cardRodape}>
-          {item.prazo && <Text style={styles.infoTexto}>📅 {item.prazo.split('-').reverse().join('/')}</Text>}
+          {item.prazo && <Text style={styles.infoTexto}>📅 {item.prazoFormatado}</Text>}
           {item.responsavel && <Text style={styles.infoTexto}>👤 {item.responsavel}</Text>}
           <View style={[styles.statusBadge, {
             backgroundColor: item.status === 'concluida' ? '#e8f5e9' : item.status === 'em_andamento' ? '#fff3e0' : '#f5f5f5'
           }]}>
-            <Text style={styles.statusTexto}>{STATUS_LABEL[item.status]}</Text>
+            <Text style={styles.statusTexto}>{item.statusLabel}</Text>
           </View>
         </View>
       </View>
@@ -116,7 +115,9 @@ export function TarefaView({ presenter }: Props) {
             onPress={() => setFiltroStatus(s)}
           >
             <Text style={[styles.filtroTexto, filtroStatus === s && styles.filtroTextoAtivo]}>
-              {s === 'todos' ? 'Todos' : STATUS_LABEL[s as StatusTarefa]}
+              {s === 'todos'
+  ? 'Todos'
+  : tarefas.find(t => t.status === s)?.statusLabel ?? s}
             </Text>
           </TouchableOpacity>
         ))}
@@ -143,7 +144,7 @@ export function TarefaView({ presenter }: Props) {
 
       <FlatList
         data={tarefasFiltradas}
-        keyExtractor={(item) => item.id_tarefa.toString()}
+        keyExtractor={(item) => item.id.toString()}
         renderItem={renderTarefa}
         contentContainerStyle={{ padding: 16, gap: 10 }}
       />
@@ -194,17 +195,21 @@ export function TarefaView({ presenter }: Props) {
               </>}
               {modalDetalhe.prazo && <>
                 <Text style={styles.detalheLabel}>Prazo</Text>
-                <Text style={styles.detalheValor}>{modalDetalhe.prazo.split('-').reverse().join('/')}</Text>
+                <Text style={styles.detalheValor}>
+                  {modalDetalhe.prazoFormatado}
+                </Text>
               </>}
               <Text style={styles.detalheLabel}>Prioridade</Text>
               <Text style={[styles.detalheValor, { color: PRIORIDADE_COR[modalDetalhe.prioridade ?? 'media'] }]}>
-                {(modalDetalhe.prioridade ?? 'media').charAt(0).toUpperCase() + (modalDetalhe.prioridade ?? 'media').slice(1)}
+                {modalDetalhe.prioridadeLabel}
               </Text>
               <Text style={styles.detalheLabel}>Alterar Status</Text>
               <View style={styles.statusContainer}>
                 {PROXIMOS_STATUS[modalDetalhe.status].map(s => (
-                  <TouchableOpacity key={s} style={styles.statusBtn} onPress={() => presenter.handleAtualizarStatus(modalDetalhe.id_tarefa, s)}>
-                    <Text style={styles.statusBtnText}>→ {STATUS_LABEL[s]}</Text>
+                  <TouchableOpacity key={s} style={styles.statusBtn} onPress={() => presenter.handleAtualizarStatus(modalDetalhe.id, s)}>
+                    <Text style={styles.statusBtnText}>
+                      → {tarefas.find(t => t.status === s)?.statusLabel ?? s}
+                    </Text>
                   </TouchableOpacity>
                 ))}
               </View>
