@@ -1,126 +1,209 @@
 # Debut.io
 
-Projeto em Expo + React Native, organizado para refletir uma arquitetura em camadas e o padrão MVP na camada de apresentação.
-Este README é um guia didático para quem vai começar a programar no projeto.
+> Sistema de gestão de festas de 15 anos — planejamento, finanças, fornecedores, tarefas e agenda em uma plataforma.
 
-## Visão rápida
+**Desenvolvido por:** André Estevam, Anna Beatriz Medeiros, Carlos Carvalho e Erick Zampier  
+**Curso:** Análise e Desenvolvimento de Sistemas — Universidade Católica de Brasília  
+**Disciplina:** Soluções Computacionais
 
-- **Expo** continua como base (não mudamos a estrutura exigida pelo framework).
-- **`src/`** concentra o código da aplicação.
-- **MVP** é usado apenas na camada de apresentação.
-- **Camadas** separam responsabilidades para manter o projeto simples de evoluir.
+---
 
-## Estrutura do projeto
+## Sumário
+
+- [Sobre o projeto](#sobre-o-projeto)
+- [Banco de dados](#banco-de-dados--decisão-arquitetural)
+- [Arquitetura: MVP + ViewModel](#arquitetura-mvp--viewmodel)
+- [Fluxo das camadas](#fluxo-das-camadas)
+- [Estrutura do frontend](#estrutura-do-frontend)
+- [Status dos módulos](#status-dos-módulos)
+- [Como rodar localmente](#como-rodar-localmente)
+
+---
+
+## Sobre o projeto
+
+O Debut.io centraliza todas as informações de um evento de 15 anos: cadastro do evento, controle financeiro, gestão de fornecedores, organização de tarefas e agenda de compromissos — numa única plataforma acessível por familiares e cerimonialistas.
+
+---
+
+## Banco de dados — Decisão Arquitetural
+
+| Item | Decisão |
+|---|---|
+| **Banco primário** | **Supabase** (PostgreSQL gerenciado em nuvem) |
+| **Versão da decisão** | v1.1 — 08/06/2026 |
+| **Substituição** | SQLite (era o banco inicial do documento de arquitetura v1.0) |
+| **SQLite hoje** | Fallback local de contingência apenas. Sem uso ativo em produção. |
+
+**Por que Supabase:**
+- Autenticação JWT gerenciada (Auth built-in)
+- API REST e SDK gerados automaticamente das tabelas
+- Real-time subscriptions para atualizações ao vivo
+- PostgreSQL robusto, com suporte a relacionamentos complexos
+- Escalabilidade para versões futuras sem migração de banco
+
+> **Regra:** todos os Repositórios do projeto apontam para Supabase.  
+> Não existe módulo apontando para SQLite em produção.
+
+---
+
+## Arquitetura: MVP + ViewModel
+
+O sistema adota **MVP (Model–View–Presenter)** com a adição explícita da camada **ViewModel**, validada pelo professor da disciplina.
+
+### O que cada camada faz
+
+| Camada | Localização | Responsabilidade | O que pode chamar |
+|---|---|---|---|
+| **View** (Screen) | `src/screens/` | Renderizar ViewModel. Capturar eventos do usuário. **Zero lógica.** | Apenas Presenter |
+| **Presenter** | `src/presenters/` | Chamar API. Transformar entidade bruta em ViewModel. Tratar erros. | API REST |
+| **ViewModel** | `src/viewmodels/` | Interface TypeScript — contrato de dados entre Presenter e View. | — |
+| **Controller** (Express) | `backend/controllers/` | Receber requisição HTTP. Validar entrada. Chamar Service. | Service |
+| **Service** | `backend/services/` | Regras de negócio. Validações de domínio. | Repository |
+| **Repository** | `backend/repositories/` | CRUD no banco de dados Supabase. | Supabase |
+
+### Regra de ouro — nenhuma camada pula outra
 
 ```
-./
-├── App.tsx
-├── index.ts
-├── src/
-│   ├── presentation/
-│   │   ├── AppRoot.tsx
-│   │   ├── mvp/
-│   │   │   ├── models/
-│   │   │   ├── presenters/
-│   │   │   └── views/
-│   │   └── modules/
-│   │       ├── agenda/
-│   │       ├── dashboard/
-│   │       ├── eventos/
-│   │       ├── financeiro/
-│   │       ├── fornecedores/
-│   │       └── tarefas/
-│   ├── application/
-│   │   └── api/
-│   │       ├── controllers/
-│   │       ├── middlewares/
-│   │       └── routes/
-│   ├── domain/
-│   │   ├── models/
-│   │   └── services/
-│   ├── persistence/
-│   │   └── repositories/
-│   └── integrations/
-│       └── google-calendar/
-└── assets/
+✅ CORRETO                       ❌ ERRADO
+────────────────────────────     ────────────────────────────
+View → Presenter                 View → Service (bypass)
+Presenter → API REST             View → Repository (bypass)
+Controller → Service             Controller → Supabase direto
+Service → Repository             Presenter → Repository direto
+Repository → Supabase
 ```
 
-## O que cada parte faz (explicação didática)
+---
 
-### 1) Entradas do Expo
+## Fluxo das camadas
 
-- **`index.ts`**: ponto de bootstrap do Expo. Registra o componente raiz.
-- **`App.tsx`**: ponto de entrada da UI. Apenas monta o `AppRoot`.
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        FRONTEND                             │
+│                                                             │
+│   ┌──────────┐     ┌───────────┐     ┌─────────────────┐   │
+│   │  Screen  │────▶│ Presenter │────▶│   ViewModel     │   │
+│   │  (View)  │◀────│           │◀────│  (interface TS) │   │
+│   └──────────┘     └─────┬─────┘     └─────────────────┘   │
+│                          │ HTTP (fetch / axios)             │
+└──────────────────────────┼──────────────────────────────────┘
+                           │
+┌──────────────────────────┼──────────────────────────────────┐
+│                      BACKEND                                │
+│                          │                                  │
+│               ┌──────────▼──────────┐                       │
+│               │  Routes + Middleware │                       │
+│               └──────────┬──────────┘                       │
+│                          │                                  │
+│               ┌──────────▼──────────┐                       │
+│               │     Controller      │ ← valida input HTTP   │
+│               └──────────┬──────────┘                       │
+│                          │                                  │
+│               ┌──────────▼──────────┐                       │
+│               │      Service        │ ← regras de negócio   │
+│               └──────────┬──────────┘                       │
+│                          │                                  │
+│               ┌──────────▼──────────┐                       │
+│               │     Repository      │ ← CRUD Supabase       │
+│               └──────────┬──────────┘                       │
+│                          │                                  │
+│               ┌──────────▼──────────┐                       │
+│               │  Supabase (Postgres) │                      │
+│               └─────────────────────┘                       │
+└─────────────────────────────────────────────────────────────┘
+```
 
-> Se você está começando, pense em `App.tsx` como a “porta de entrada” da interface.
+---
 
-### 2) Camada de Apresentação (UI) — `src/presentation`
+## Estrutura do frontend
 
-Aqui fica tudo que aparece na tela. Esta camada usa **MVP**.
+```
+src/
+├── viewmodels/         ← Interfaces TypeScript (contrato View↔Presenter)
+│   ├── LoginViewModel.ts
+│   ├── CadastroViewModel.ts
+│   ├── EventoViewModel.ts
+│   ├── FornecedorViewModel.ts
+│   ├── FinanceiroViewModel.ts
+│   ├── TarefaViewModel.ts
+│   ├── AgendaViewModel.ts
+│   ├── DashboardViewModel.ts
+│   └── index.ts        ← barrel export (sempre importe daqui)
+│
+├── presenters/         ← Lógica de apresentação, transformação de dados
+├── screens/            ← Componentes React (View) — apenas render + eventos
+├── services/           ← Chamadas HTTP à API REST
+└── ...
+```
 
-- **`AppRoot.tsx`**: compõe a aplicação e cria o Presenter principal.
-- **`mvp/`**:
-	- **`views/`**: componentes visuais (React Native). Mostram dados e disparam ações.
-	- **`presenters/`**: recebem eventos da View, chamam serviços e devolvem dados.
-	- **`models/`**: estruturas de dados usadas pela UI (formatos simples para a View).
-- **`modules/`**: organização por módulos funcionais:
-	- **`eventos/`**, **`financeiro/`**, **`fornecedores/`**, **`tarefas/`**, **`agenda/`**, **`dashboard/`**.
+### Como importar ViewModels
 
-> MVP aqui significa: **View → Presenter → Model**. A View não fala direto com regra de negócio.
+```typescript
+// ✅ Sempre pelo barrel export
+import { TarefaViewModel, DashboardViewModel } from '../viewmodels';
 
-### 3) Camada de Aplicação (API REST) — `src/application`
+// ❌ Nunca direto no arquivo — acopla ao path interno
+import { TarefaViewModel } from '../viewmodels/TarefaViewModel';
+```
 
-Responsável por orquestrar o fluxo entre UI e domínio, como se fosse um “porteiro” da aplicação.
+### ViewModels disponíveis
 
-- **`routes/`**: define endpoints (URLs) e operações.
-- **`controllers/`**: recebe requisições, valida dados, chama serviços e retorna resposta.
-- **`middlewares/`**: autenticação, autorização, validações comuns, logs e erros.
+| ViewModel | Módulo | Casos de Uso (UC) |
+|---|---|---|
+| `LoginViewModel` | Autenticação | UC16 |
+| `CadastroViewModel` | Cadastro de usuário | — |
+| `EventoViewModel` | Gestão de eventos | UC01, UC02, UC03, UC04 |
+| `FornecedorViewModel` | Fornecedores | UC05 |
+| `FinanceiroViewModel` | Financeiro + Pagamentos | UC06, UC07, UC14 |
+| `TarefaListaViewModel` / `TarefaViewModel` | Tarefas | UC08, UC09, UC10 |
+| `AgendaViewModel` | Compromissos | UC11, UC12 |
+| `DashboardViewModel` | Painel geral | UC14, UC15 |
 
-> Aqui não ficam regras complexas. Apenas coordenação.
+---
 
-### 4) Camada de Domínio — `src/domain`
+## Status dos módulos
 
-É o “coração” do sistema. As regras de negócio vivem aqui.
+| Módulo | Presentation | Controller | Service | Repository | ViewModel | Routes | Status |
+|---|---|---|---|---|---|---|---|
+| **Login** | ⚠️ refatorar | ⚠️ ajustar | ✅ | ✅ Supabase | 🔄 pendente | 🔄 pendente | Em refatoração |
+| **Cadastro** | ⚠️ refatorar | ⚠️ ajustar | ✅ | ✅ | 🔄 pendente | 🔄 pendente | Em refatoração |
+| **Eventos** | ⚠️ refatorar | ⚠️ ajustar | ✅ | ✅ | 🔄 pendente | ⚠️ parcial | Em refatoração |
+| **Fornecedores** | ⚠️ refatorar | ⚠️ ajustar | ✅ | ✅ | 🔄 pendente | ⚠️ parcial | Em refatoração |
+| **Financeiro** | 🔴 remover bypass | ⚠️ ajustar | ✅ | ✅ | 🔄 pendente | 🔄 pendente | Crítico |
+| **Tarefas** | ✅ refatorado | ✅ em uso | ✅ | ✅ Supabase | 🔄 pendente | 🔄 pendente | Quase pronto |
+| **Agenda** | ✅ refatorado | ✅ em uso | ✅ | ✅ Supabase | 🔄 pendente | 🔄 pendente | Quase pronto |
+| **Dashboard** | ⚠️ acoplado | 🔴 criar | ⚠️ ajustar | ⚠️ ajustar | 🔄 pendente | 🔄 pendente | Reconstruir |
+| **Main** | ✅ navegação | — | — | — | — | — | Container OK |
 
-- **`models/`**: entidades do negócio (Usuário, Evento, Pagamento, Tarefa...).
-- **`services/`**: regras e validações (ex.: controle de orçamento, status de tarefas, etc).
+**Legenda:** ✅ ok · ⚠️ existe fora do padrão · 🔴 crítico · 🔄 pendente
 
-> Se algo é uma regra do negócio, deve estar nesta camada.
+---
 
-### 5) Persistência — `src/persistence`
-
-Responsável por **acessar o banco** e salvar/ler dados.
-
-- **`repositories/`**: operações CRUD, consultas e encapsulamento de banco.
-
-> A regra de negócio **não** conhece o banco diretamente, usa repositórios.
-
-### 6) Integrações externas — `src/integrations`
-
-Comunica com serviços de terceiros.
-
-- **`google-calendar/`**: integração com Google Calendar para sincronizar agenda.
-
-## Como seguir o fluxo (exemplo mental)
-
-1. Usuário toca na tela (View).
-2. View chama o Presenter.
-3. Presenter chama a API (Camada de Aplicação).
-4. Camada de Aplicação chama Services (Domínio).
-5. Services usam Repositories (Persistência).
-6. Dados voltam para o Presenter e a View atualiza.
-
-## Dicas para quem está começando
-
-- Quer criar uma tela? Vá para `src/presentation/mvp/views/`.
-- Quer organizar um módulo novo? Crie uma pasta dentro de `src/presentation/modules/`.
-- Quer uma regra de negócio? Crie/edite em `src/domain/services/`.
-- Precisa de dados do banco? Use/implemente um repositório em `src/persistence/repositories/`.
-- Integração externa? Coloque em `src/integrations/`.
-
-## Como rodar
+## Como rodar localmente
 
 ```bash
+# Backend
+cd backend
 npm install
-npm run start
+npm run dev
+
+# Frontend (em outro terminal)
+cd frontend
+npm install
+npm run dev
 ```
+
+> Variáveis de ambiente necessárias: ver `.env.example`
+
+---
+
+## Tecnologias
+
+| Camada | Tecnologia |
+|---|---|
+| Frontend | React.js + TypeScript |
+| Backend | Node.js + Express.js |
+| Banco de dados | Supabase (PostgreSQL) |
+| Autenticação | Supabase Auth (JWT) |
+| Padrão arquitetural | MVP + ViewModel (Layered Architecture) |
