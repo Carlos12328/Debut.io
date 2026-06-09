@@ -1,4 +1,4 @@
-﻿import { RecuperacaoSenhaService } from '../../../domain/services';
+﻿import { AuthController } from '../../../application/api/controllers/AuthController';
 
 export interface RecuperacaoSenhaView {
   showLoading(): void;
@@ -11,7 +11,7 @@ export interface RecuperacaoSenhaView {
 export class RecuperacaoSenhaPresenter {
   private view: RecuperacaoSenhaView | null = null;
 
-  constructor(private readonly service: RecuperacaoSenhaService) {}
+  constructor(private readonly controller: AuthController) {}
 
   attachView(view: RecuperacaoSenhaView) {
     this.view = view;
@@ -23,10 +23,14 @@ export class RecuperacaoSenhaPresenter {
 
   async handleVerificarEmail(email: string) {
     if (!this.view) return;
+
     this.view.showLoading();
     try {
-      await this.service.verificarEmail(email);
+      await this.controller.verificarEmail(email);
+
+      // Agora não vai direto pra nova senha
       this.view.onEmailVerificado();
+
     } catch (error: any) {
       this.view.showError(error.message ?? 'Erro ao verificar e-mail.');
     } finally {
@@ -34,15 +38,17 @@ export class RecuperacaoSenhaPresenter {
     }
   }
 
-  async handleRedefinirSenha(email: string, novaSenha: string, confirmarSenha: string) {
+  async handleRedefinirSenha(novaSenha: string, confirmarSenha: string) {
     if (!this.view) return;
+
     if (novaSenha !== confirmarSenha) {
       this.view.showError('As senhas não coincidem.');
       return;
     }
+
     this.view.showLoading();
     try {
-      await this.service.redefinirSenha(email, novaSenha);
+      await this.controller.redefinirSenha(novaSenha);
       this.view.onSenhaRedefinida();
     } catch (error: any) {
       this.view.showError(error.message ?? 'Erro ao redefinir senha.');
