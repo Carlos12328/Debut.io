@@ -1,22 +1,92 @@
-import { supabase } from '../../lib/supabase';
+import { UsuarioRepository } from '../../persistence/repositories';
 
 export class RecuperacaoSenhaServiceImpl {
+  private codigoGerado: string | null = null;
+  private emailVerificado: string | null = null;
 
-  async verificarEmail(email: string): Promise<void> {
-    if (!email) throw new Error('Email é obrigatório');
+  constructor(
+    private readonly usuarioRepository: UsuarioRepository
+  ) {}
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
+  async verificarEmail(
+    email: string
+  ): Promise<string> {
 
-    if (error) throw new Error(error.message);
+    if (!email) {
+      throw new Error(
+        'Email é obrigatório.'
+      );
+    }
+
+    if (!email.includes('@')) {
+      throw new Error(
+        'Formato de email inválido.'
+      );
+    }
+
+    const usuario =
+      await this.usuarioRepository
+        .getByEmail(email);
+
+    if (!usuario) {
+      throw new Error(
+        'Email não encontrado.'
+      );
+    }
+
+    this.emailVerificado = email;
+
+    this.codigoGerado = Math.floor(
+      100000 + Math.random() * 900000
+    ).toString();
+
+    return this.codigoGerado;
   }
 
-  async redefinirSenha(novaSenha: string): Promise<void> {
-    if (!novaSenha) throw new Error('Senha inválida');
+  validarCodigo(
+    codigo: string
+  ): boolean {
+    return codigo === this.codigoGerado;
+  }
 
-    const { error } = await supabase.auth.updateUser({
-      password: novaSenha,
-    });
+  async redefinirSenha(
+    novaSenha: string
+  ): Promise<void> {
 
-    if (error) throw new Error(error.message);
+    if (!this.emailVerificado) {
+      throw new Error(
+        'Nenhum email validado.'
+      );
+    }
+
+    if (!novaSenha) {
+      throw new Error(
+        'Senha inválida.'
+      );
+    }
+
+    const usuario =
+      await this.usuarioRepository
+        .getByEmail(
+          this.emailVerificado
+        );
+
+    if (!usuario) {
+      throw new Error(
+        'Usuário não encontrado.'
+      );
+    }
+
+    await this.usuarioRepository.update(
+      usuario.id_usuario,
+      {
+        senha_hash: novaSenha
+      }
+    );
+
+    console.log(
+      '[MVP] senha redefinida:',
+      this.emailVerificado
+    );
   }
 }
