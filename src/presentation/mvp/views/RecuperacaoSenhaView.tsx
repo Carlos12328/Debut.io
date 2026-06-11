@@ -158,8 +158,15 @@ export function RecuperacaoSenhaView({
             style={styles.input}
             placeholder="Código"
             value={codigo}
-            onChangeText={setCodigo}
+            onChangeText={(text) =>
+              setCodigo(
+                text
+                  .replace(/[^0-9]/g, '')
+                  .slice(0, 6)
+              )
+            }
             keyboardType="numeric"
+            maxLength={6}
           />
 
           <TouchableOpacity
@@ -187,6 +194,7 @@ export function RecuperacaoSenhaView({
         </Text>
 
         <TextInput
+          key="nova-senha"
           style={styles.input}
           placeholder="Nova senha"
           value={novaSenha}
@@ -195,12 +203,11 @@ export function RecuperacaoSenhaView({
         />
 
         <TextInput
+          key="confirmar-senha"
           style={styles.input}
           placeholder="Confirmar senha"
           value={confirmarSenha}
-          onChangeText={
-            setConfirmarSenha
-          }
+          onChangeText={setConfirmarSenha}
           secureTextEntry
         />
 

@@ -57,13 +57,6 @@ export class RecuperacaoSenhaServiceImpl {
   validarCodigo(
     codigo: string
   ): boolean {
-
-    if (!codigo.trim()) {
-      throw new Error(
-        'Código é obrigatório.'
-      );
-    }
-
     return (
       codigo ===
       this.codigoGerado

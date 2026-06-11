@@ -56,9 +56,28 @@ export class RecuperacaoSenhaPresenter {
   ) {
     if (!this.view) return;
 
+    const codigoLimpo =
+      codigo.trim();
+
+    if (!codigoLimpo) {
+      this.view.showError(
+        'Código é obrigatório.'
+      );
+      return;
+    }
+
+    if (codigoLimpo.length !== 6) {
+      this.view.showError(
+        'O código deve ter 6 dígitos.'
+      );
+      return;
+    }
+
     const valido =
       this.controller
-        .validarCodigo(codigo);
+        .validarCodigo(
+          codigoLimpo
+        );
 
     if (!valido) {
       this.view.showError(
@@ -75,6 +94,20 @@ export class RecuperacaoSenhaPresenter {
     confirmarSenha: string
   ) {
     if (!this.view) return;
+
+    if (!novaSenha.trim()) {
+      this.view.showError(
+        'Nova senha é obrigatória.'
+      );
+      return;
+    }
+
+    if (!confirmarSenha.trim()) {
+      this.view.showError(
+        'Confirmação de senha é obrigatória.'
+      );
+      return;
+    }
 
     if (novaSenha !== confirmarSenha) {
       this.view.showError(
