@@ -1,9 +1,12 @@
-﻿import * as bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcryptjs';
 import { Usuario } from '../models/usuario';
 import { UsuarioRepository } from '../../persistence/repositories';
 
 export interface AuthService {
-  login(email: string, senha: string): Promise<Usuario>;
+  login(
+    email: string,
+    senha: string
+  ): Promise<Usuario>;
 }
 
 export class AuthServiceImpl
@@ -19,9 +22,24 @@ implements AuthService {
     senha: string
   ): Promise<Usuario> {
 
-    if (!email || !senha) {
+    if (!email.trim()) {
       throw new Error(
-        'E-mail e senha são obrigatórios.'
+        'E-mail é obrigatório.'
+      );
+    }
+
+    const emailRegex =
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email)) {
+      throw new Error(
+        'E-mail inválido.'
+      );
+    }
+
+    if (!senha.trim()) {
+      throw new Error(
+        'Senha é obrigatória.'
       );
     }
 
@@ -31,7 +49,7 @@ implements AuthService {
 
     if (!usuario) {
       throw new Error(
-        'E-mail ou senha inválidos.'
+        'Usuário não encontrado.'
       );
     }
 
@@ -43,7 +61,7 @@ implements AuthService {
 
     if (!senhaValida) {
       throw new Error(
-        'E-mail ou senha inválidos.'
+        'Senha incorreta.'
       );
     }
 

@@ -2,26 +2,33 @@ import { UsuarioRepository } from '../../persistence/repositories';
 import * as bcrypt from 'bcryptjs';
 
 export class RecuperacaoSenhaServiceImpl {
-  private codigoGerado: string | null = null;
-  private emailVerificado: string | null = null;
+  private codigoGerado:
+    string | null = null;
+
+  private emailVerificado:
+    string | null = null;
 
   constructor(
-    private readonly usuarioRepository: UsuarioRepository
+    private readonly usuarioRepository:
+    UsuarioRepository
   ) {}
 
   async verificarEmail(
     email: string
   ): Promise<string> {
 
-    if (!email) {
+    if (!email.trim()) {
       throw new Error(
-        'Email é obrigatório.'
+        'E-mail é obrigatório.'
       );
     }
 
-    if (!email.includes('@')) {
+    const emailRegex =
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email)) {
       throw new Error(
-        'Formato de email inválido.'
+        'E-mail inválido.'
       );
     }
 
@@ -31,15 +38,18 @@ export class RecuperacaoSenhaServiceImpl {
 
     if (!usuario) {
       throw new Error(
-        'Email não encontrado.'
+        'Usuário não encontrado.'
       );
     }
 
-    this.emailVerificado = email;
+    this.emailVerificado =
+      email;
 
-    this.codigoGerado = Math.floor(
-      100000 + Math.random() * 900000
-    ).toString();
+    this.codigoGerado =
+      Math.floor(
+        100000 +
+        Math.random() * 900000
+      ).toString();
 
     return this.codigoGerado;
   }
@@ -47,22 +57,38 @@ export class RecuperacaoSenhaServiceImpl {
   validarCodigo(
     codigo: string
   ): boolean {
-    return codigo === this.codigoGerado;
+
+    if (!codigo.trim()) {
+      throw new Error(
+        'Código é obrigatório.'
+      );
+    }
+
+    return (
+      codigo ===
+      this.codigoGerado
+    );
   }
 
   async redefinirSenha(
-  novaSenha: string
+    novaSenha: string
   ): Promise<void> {
 
     if (!this.emailVerificado) {
       throw new Error(
-        'Nenhum email validado.'
+        'Nenhum e-mail validado.'
       );
     }
 
-    if (!novaSenha) {
+    if (!novaSenha.trim()) {
       throw new Error(
-        'Senha inválida.'
+        'Senha é obrigatória.'
+      );
+    }
+
+    if (novaSenha.length < 6) {
+      throw new Error(
+        'A senha deve ter pelo menos 6 caracteres.'
       );
     }
 
@@ -87,12 +113,13 @@ export class RecuperacaoSenhaServiceImpl {
         salt
       );
 
-    await this.usuarioRepository.update(
-      usuario.id_usuario,
-      {
-        senha_hash
-      }
-    );
+    await this.usuarioRepository
+      .update(
+        usuario.id_usuario,
+        {
+          senha_hash
+        }
+      );
 
     console.log(
       '[MVP] senha redefinida:',
