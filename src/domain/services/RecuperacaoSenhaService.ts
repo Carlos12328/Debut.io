@@ -1,4 +1,5 @@
 import { UsuarioRepository } from '../../persistence/repositories';
+import * as bcrypt from 'bcryptjs';
 
 export class RecuperacaoSenhaServiceImpl {
   private codigoGerado: string | null = null;
@@ -50,7 +51,7 @@ export class RecuperacaoSenhaServiceImpl {
   }
 
   async redefinirSenha(
-    novaSenha: string
+  novaSenha: string
   ): Promise<void> {
 
     if (!this.emailVerificado) {
@@ -77,10 +78,19 @@ export class RecuperacaoSenhaServiceImpl {
       );
     }
 
+    const salt =
+      bcrypt.genSaltSync(10);
+
+    const senha_hash =
+      bcrypt.hashSync(
+        novaSenha,
+        salt
+      );
+
     await this.usuarioRepository.update(
       usuario.id_usuario,
       {
-        senha_hash: novaSenha
+        senha_hash
       }
     );
 
