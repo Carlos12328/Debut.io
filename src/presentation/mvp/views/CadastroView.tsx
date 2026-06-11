@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
   textoErro: { fontSize: 12, color: '#e74c3c', marginBottom: 12, marginTop: 2, fontStyle: 'italic' },
   textoHint: { fontSize: 12, color: '#aaa', marginBottom: 12, marginTop: 2, fontStyle: 'italic' },
   label: { fontSize: 14, color: '#555', marginBottom: 8, marginTop: 4 },
-  perfilcontainer: { paddingTop: 55,  flexDirection: 'row', gap: 12, marginBottom: 24 },
+  perfilContainer: { paddingTop: 55,  flexDirection: 'row', gap: 12, marginBottom: 24 },
   perfilBtn: { flex: 1, padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#9b59b6', alignItems: 'center' },
   perfilBtnAtivo: { backgroundColor: '#9b59b6' },
   perfilBtnText: { color: '#9b59b6', fontWeight: '600' },
@@ -301,6 +301,7 @@ const styles = StyleSheet.create({
   inputEstado: { flex: 1 },
   button: { backgroundColor: '#9b59b6', padding: 14, borderRadius: 8, alignItems: 'center', marginBottom: 16, marginTop: 8 },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  linkcontainer: { paddingTop: 55,  alignItems: 'center' },
+  linkContainer: { paddingTop: 55,  alignItems: 'center' },
   link: { color: '#9b59b6', fontSize: 14 },
 });
+
