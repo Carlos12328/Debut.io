@@ -1,4 +1,4 @@
-import * as SQLite from 'expo-sqlite';
+﻿import * as SQLite from 'expo-sqlite';
 
 const DATABASE_NAME = 'debut_v4.db';
 let database: SQLite.SQLiteDatabase | null = null;
@@ -20,6 +20,7 @@ async function criarTabelas(db: SQLite.SQLiteDatabase) {
       endereco_estado     TEXT,
       endereco_cep        TEXT
     );
+
     CREATE TABLE IF NOT EXISTS evento (
       id_evento   INTEGER PRIMARY KEY AUTOINCREMENT,
       id_usuario  INTEGER,
@@ -29,6 +30,7 @@ async function criarTabelas(db: SQLite.SQLiteDatabase) {
       status      TEXT CHECK(status IN ('ativo','encerrado')),
       FOREIGN KEY(id_usuario) REFERENCES usuario(id_usuario)
     );
+
     CREATE TABLE IF NOT EXISTS fornecedor (
       id_fornecedor       INTEGER PRIMARY KEY AUTOINCREMENT,
       id_evento           INTEGER,
@@ -46,6 +48,7 @@ async function criarTabelas(db: SQLite.SQLiteDatabase) {
       endereco_cep        TEXT,
       FOREIGN KEY(id_evento) REFERENCES evento(id_evento)
     );
+
     CREATE TABLE IF NOT EXISTS pagamento (
       id_pagamento  INTEGER PRIMARY KEY AUTOINCREMENT,
       id_fornecedor INTEGER,
@@ -54,6 +57,7 @@ async function criarTabelas(db: SQLite.SQLiteDatabase) {
       status        TEXT CHECK(status IN ('pendente','pago')),
       FOREIGN KEY(id_fornecedor) REFERENCES fornecedor(id_fornecedor)
     );
+
     CREATE TABLE IF NOT EXISTS tarefa (
       id_tarefa INTEGER PRIMARY KEY AUTOINCREMENT,
       id_evento INTEGER,
@@ -61,11 +65,16 @@ async function criarTabelas(db: SQLite.SQLiteDatabase) {
       status    TEXT CHECK(status IN ('pendente','concluida')),
       FOREIGN KEY(id_evento) REFERENCES evento(id_evento)
     );
+
     CREATE TABLE IF NOT EXISTS compromisso (
-      id_compromisso   INTEGER PRIMARY KEY AUTOINCREMENT,
-      id_evento        INTEGER,
-      descricao        TEXT,
-      data_compromisso DATE,
+      id_compromisso     INTEGER PRIMARY KEY AUTOINCREMENT,
+      id_evento          INTEGER NOT NULL,
+      descricao          TEXT NOT NULL,
+      data_compromisso   DATE NOT NULL,
+      horario            TIME,
+      observacoes        TEXT,
+      alerta_configurado INTEGER NOT NULL DEFAULT 1,
+      data_cadastro      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY(id_evento) REFERENCES evento(id_evento)
     );
   `);
@@ -76,5 +85,6 @@ export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
     database = await SQLite.openDatabaseAsync(DATABASE_NAME);
     await criarTabelas(database);
   }
+
   return database;
 }
