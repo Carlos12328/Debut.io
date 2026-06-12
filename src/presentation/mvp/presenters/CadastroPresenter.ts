@@ -28,7 +28,7 @@ export class CadastroPresenter {
     confirmarSenha: string,
     perfil: PerfilUsuario,
     cpf: string,
-    data_nascimento?: string,
+    data_nascimento: string,
     endereco_logradouro?: string,
     endereco_numero?: string,
     endereco_bairro?: string,

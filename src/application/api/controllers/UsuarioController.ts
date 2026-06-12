@@ -17,18 +17,35 @@ export class UsuarioController {
   }
 
   async cadastrar(
-    nome: string, email: string, senha: string,
-    perfil: 'familiar' | 'cerimonialista', cpf: string,
-    data_nascimento?: string, endereco_logradouro?: string,
-    endereco_numero?: string, endereco_bairro?: string,
-    endereco_cidade?: string, endereco_estado?: string, endereco_cep?: string,
+    nome: string,
+    email: string,
+    senha: string,
+    perfil: 'familiar' | 'cerimonialista',
+    cpf: string,
+    data_nascimento: string,
+    endereco_logradouro?: string,
+    endereco_numero?: string,
+    endereco_bairro?: string,
+    endereco_cidade?: string,
+    endereco_estado?: string,
+    endereco_cep?: string,
   ) {
     try {
       const usuario = await this.cadastroService.cadastrar(
-        nome, email, senha, perfil, cpf,
-        data_nascimento, endereco_logradouro, endereco_numero,
-        endereco_bairro, endereco_cidade, endereco_estado, endereco_cep,
+        nome,
+        email,
+        senha,
+        perfil,
+        cpf,
+        data_nascimento,
+        endereco_logradouro,
+        endereco_numero,
+        endereco_bairro,
+        endereco_cidade,
+        endereco_estado,
+        endereco_cep,
       );
+
       return { sucesso: true, dados: usuario };
     } catch (error: any) {
       return { sucesso: false, erro: error.message };

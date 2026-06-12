@@ -8,8 +8,8 @@ export interface Usuario {
   email: string;
   senha_hash: string;
   perfil: PerfilUsuario;
-  cpf?: string;
-  data_nascimento?: string;
+  cpf: string;
+  data_nascimento: string;
   endereco_logradouro?: string;
   endereco_numero?: string;
   endereco_bairro?: string;
