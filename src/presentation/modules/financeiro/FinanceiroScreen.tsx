@@ -1,34 +1,40 @@
-﻿/**
- * FinanceiroScreen.tsx — Debut.io
- * src/presentation/modules/financeiro/FinanceiroScreen.tsx
- * Padrão: mesmo de FornecedorScreen.tsx e EventoScreen.tsx
- */
-import React, { useMemo } from 'react';
-import { FinanceiroView }    from '../../mvp/views/FinanceiroView';
+import React, { useMemo, useState } from 'react';
+import { FinanceiroView } from '../../mvp/views/FinanceiroView';
 import { FinanceiroPresenter } from '../../mvp/presenters/FinanceiroPresenter';
-import { PagamentoServiceImpl }  from '../../../domain/services/PagamentoService';
-import { FornecedorServiceImpl } from '../../../domain/services/FornecedorService';
-import { PagamentoSupabaseRepository }  from '../../../persistence/repositories/PagamentoSupabaseRepository';
+import { PagamentoView } from '../../mvp/views/PagamentoView';
+import { PagamentoPresenter } from '../../mvp/presenters/PagamentoPresenter';
+import { FornecedorServiceImpl, PagamentoServiceImpl } from '../../../domain/services';
+import { FornecedorController, PagamentoController } from '../../../application/api/controllers';
 import { FornecedorSupabaseRepository } from '../../../persistence/repositories/FornecedorSupabaseRepository';
-import type { Evento } from '../../../domain/models';
+import { PagamentoSupabaseRepository } from '../../../persistence/repositories/PagamentoSupabaseRepository';
+import { Evento, Fornecedor } from '../../../domain/models';
 
-interface Props { evento: Evento; onVoltar?: () => void; }
+interface Props { evento: Evento; }
 
 export function FinanceiroScreen({ evento }: Props) {
-  const presenter = useMemo(() => {
-    const pagRepo  = new PagamentoSupabaseRepository();
-    const forRepo  = new FornecedorSupabaseRepository();
-    const pagSvc   = new PagamentoServiceImpl(pagRepo);
-    const forSvc   = new FornecedorServiceImpl(forRepo);
-    return new FinanceiroPresenter(pagSvc, forSvc);
-  }, []);
+  const [fornecedorSelecionado, setFornecedorSelecionado] = useState<Fornecedor | null>(null);
 
-  return (
-    <FinanceiroView
-      presenter={presenter}
-      idEvento={evento.id_evento}
-      orcamento={evento.orcamento}
-    />
-  );
+  const financeiroPresenter = useMemo(() => {
+    const fCtrl = new FornecedorController(new FornecedorServiceImpl(new FornecedorSupabaseRepository()));
+    const pCtrl = new PagamentoController(new PagamentoServiceImpl(new PagamentoSupabaseRepository()));
+    return new FinanceiroPresenter(fCtrl, pCtrl, evento.id_evento);
+  }, [evento.id_evento]);
+
+  const pagamentoPresenter = useMemo(() => {
+    if (!fornecedorSelecionado) return null;
+    const ctrl = new PagamentoController(new PagamentoServiceImpl(new PagamentoSupabaseRepository()));
+    return new PagamentoPresenter(ctrl, fornecedorSelecionado.id_fornecedor);
+  }, [fornecedorSelecionado]);
+
+  if (fornecedorSelecionado && pagamentoPresenter) {
+    return (
+      <PagamentoView
+        presenter={pagamentoPresenter}
+        nomeFornecedor={fornecedorSelecionado.nome}
+        onVoltar={() => setFornecedorSelecionado(null)}
+      />
+    );
+  }
+
+  return <FinanceiroView presenter={financeiroPresenter} onSelecionarFornecedor={setFornecedorSelecionado} />;
 }
-

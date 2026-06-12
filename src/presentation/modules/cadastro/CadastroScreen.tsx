@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
 import { CadastroView } from '../../mvp/views/CadastroView';
 import { CadastroPresenter } from '../../mvp/presenters/CadastroPresenter';
-import { CadastroServiceImpl } from '../../../domain/services';
+import { AuthServiceImpl, CadastroServiceImpl } from '../../../domain/services';
+import { UsuarioController } from '../../../application/api/controllers';
 import { UsuarioSupabaseRepository } from '../../../persistence/repositories/UsuarioSupabaseRepository';
 import { Usuario } from '../../../domain/models';
 
@@ -13,8 +14,8 @@ interface Props {
 export function CadastroScreen({ onCadastroSuccess, onVoltarLogin }: Props) {
   const presenter = useMemo(() => {
     const repo = new UsuarioSupabaseRepository();
-    const service = new CadastroServiceImpl(repo);
-    return new CadastroPresenter(service);
+    const controller = new UsuarioController(new AuthServiceImpl(repo), new CadastroServiceImpl(repo));
+    return new CadastroPresenter(controller);
   }, []);
 
   return (

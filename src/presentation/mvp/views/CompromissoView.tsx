@@ -51,7 +51,7 @@ export function CompromissoView({ presenter }: Props) {
         <Text style={styles.descricao}>{item.descricao}</Text>
       </View>
       <TouchableOpacity onPress={() => confirmarRemocao(item)}>
-        <Text style={styles.btnRemover}>✕</Text>
+        <Text style={styles.btnRemover}>x</Text>
       </TouchableOpacity>
     </View>
   );
