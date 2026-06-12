@@ -4,16 +4,16 @@
  * UC14 — Dashboard financeiro | UC15 — Visão geral
  */
 import { Router, Request, Response } from 'express';
-import { DashboardController }           from '../controllers/DashboardController';
-import { TarefaServiceImpl }             from '../../../domain/services/TarefaService';
-import { PagamentoServiceImpl }          from '../../../domain/services/PagamentoService';
-import { CompromissoServiceImpl }        from '../../../domain/services/CompromissoService';
-import { FornecedorServiceImpl }         from '../../../domain/services/FornecedorService';
-import { TarefaSupabaseRepository }      from '../../../persistence/repositories/TarefaSupabaseRepository';
-import { PagamentoSupabaseRepository }   from '../../../persistence/repositories/PagamentoSupabaseRepository';
+import { DashboardController } from '../controllers/DashboardController';
+import { TarefaServiceImpl } from '../../../domain/services/TarefaService';
+import { PagamentoServiceImpl } from '../../../domain/services/PagamentoService';
+import { CompromissoServiceImpl } from '../../../domain/services/CompromissoService';
+import { FornecedorServiceImpl } from '../../../domain/services/FornecedorService';
+import { TarefaSupabaseRepository } from '../../../persistence/repositories/TarefaSupabaseRepository';
+import { PagamentoSupabaseRepository } from '../../../persistence/repositories/PagamentoSupabaseRepository';
 import { CompromissoSupabaseRepository } from '../../../persistence/repositories/CompromissoSupabaseRepository';
-import { FornecedorSupabaseRepository }  from '../../../persistence/repositories/FornecedorSupabaseRepository';
-import { EventoSupabaseRepository }      from '../../../persistence/repositories/EventoSupabaseRepository';
+import { FornecedorSupabaseRepository } from '../../../persistence/repositories/FornecedorSupabaseRepository';
+import { EventoSupabaseRepository } from '../../../persistence/repositories/EventoSupabaseRepository';
 import { authMiddleware } from '../middlewares/auth.middleware';
 
 const router = Router();
@@ -24,7 +24,7 @@ function getController() {
     new TarefaServiceImpl(new TarefaSupabaseRepository()),
     new PagamentoServiceImpl(new PagamentoSupabaseRepository()),
     new CompromissoServiceImpl(new CompromissoSupabaseRepository()),
-    new FornecedorServiceImpl(new FornecedorSupabaseRepository()),
+    new FornecedorServiceImpl(new FornecedorSupabaseRepository())
   );
 }
 
