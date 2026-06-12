@@ -1,27 +1,46 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { FornecedorView } from '../../mvp/views/FornecedorView';
 import { FornecedorPresenter } from '../../mvp/presenters/FornecedorPresenter';
-import { FornecedorServiceImpl } from '../../../domain/services';
+import { PagamentoView } from '../../mvp/views/PagamentoView';
+import { PagamentoPresenter } from '../../mvp/presenters/PagamentoPresenter';
+import { FornecedorServiceImpl, PagamentoServiceImpl } from '../../../domain/services';
+import { FornecedorController, PagamentoController } from '../../../application/api/controllers';
 import { FornecedorSupabaseRepository } from '../../../persistence/repositories/FornecedorSupabaseRepository';
-import { Evento } from '../../../domain/models';
+import { PagamentoSupabaseRepository } from '../../../persistence/repositories/PagamentoSupabaseRepository';
+import { Evento, Fornecedor } from '../../../domain/models';
 
-interface Props {
-  evento: Evento;
-  onVoltar: () => void;
-}
+interface Props { evento: Evento; onVoltar: () => void; }
 
 export function FornecedorScreen({ evento, onVoltar }: Props) {
-  const presenter = useMemo(() => {
-    const repo = new FornecedorSupabaseRepository();
-    const service = new FornecedorServiceImpl(repo);
-    return new FornecedorPresenter(service, evento.id_evento);
+  const [fornecedorSelecionado, setFornecedorSelecionado] = useState<Fornecedor | null>(null);
+
+  const fornecedorPresenter = useMemo(() => {
+    const controller = new FornecedorController(new FornecedorServiceImpl(new FornecedorSupabaseRepository()));
+    return new FornecedorPresenter(controller, evento.id_evento);
   }, [evento.id_evento]);
+
+  const pagamentoPresenter = useMemo(() => {
+    if (!fornecedorSelecionado) return null;
+    const controller = new PagamentoController(new PagamentoServiceImpl(new PagamentoSupabaseRepository()));
+    return new PagamentoPresenter(controller, fornecedorSelecionado.id_fornecedor);
+  }, [fornecedorSelecionado]);
+
+  if (fornecedorSelecionado && pagamentoPresenter) {
+    return (
+      <PagamentoView
+        presenter={pagamentoPresenter}
+        nomeFornecedor={fornecedorSelecionado.nome}
+        onVoltar={() => setFornecedorSelecionado(null)}
+      />
+    );
+  }
 
   return (
     <FornecedorView
-      presenter={presenter}
+      presenter={fornecedorPresenter}
       nomeEvento={evento.nome}
       onVoltar={onVoltar}
+      onSelecionarFornecedor={setFornecedorSelecionado}
     />
   );
 }

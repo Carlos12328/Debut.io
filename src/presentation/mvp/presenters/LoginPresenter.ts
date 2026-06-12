@@ -1,4 +1,4 @@
-import { AuthService } from '../../../domain/services';
+import { UsuarioController } from '../../../application/api/controllers/UsuarioController';
 import { Usuario } from '../../../domain/models';
 
 export interface LoginView {
@@ -10,28 +10,19 @@ export interface LoginView {
 
 export class LoginPresenter {
   private view: LoginView | null = null;
-
-  constructor(private readonly authService: AuthService) {}
-
-  attachView(view: LoginView) {
-    this.view = view;
-  }
-
-  detachView() {
-    this.view = null;
-  }
+  constructor(private readonly usuarioController: UsuarioController) {}
+  attachView(view: LoginView) { this.view = view; }
+  detachView() { this.view = null; }
 
   async handleLogin(email: string, senha: string) {
     if (!this.view) return;
-
     this.view.showLoading();
     try {
-      const usuario = await this.authService.login(email, senha);
-      this.view.onLoginSuccess(usuario);
+      const response = await this.usuarioController.login(email, senha);
+      if (!response.sucesso || !response.dados) throw new Error(response.erro ?? 'Erro ao fazer login.');
+      this.view.onLoginSuccess(response.dados);
     } catch (error: any) {
       this.view.showError(error.message ?? 'Erro ao fazer login.');
-    } finally {
-      this.view.hideLoading();
-    }
+    } finally { this.view.hideLoading(); }
   }
 }
