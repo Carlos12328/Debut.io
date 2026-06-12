@@ -1,5 +1,6 @@
 ﻿import { AuthServiceImpl } from '../../../domain/services/AuthService';
 import { CadastroServiceImpl } from '../../../domain/services/CadastroService';
+import { PerfilUsuario } from '../../../domain/models';
 
 export class UsuarioController {
   constructor(
@@ -20,7 +21,7 @@ export class UsuarioController {
     nome: string,
     email: string,
     senha: string,
-    perfil: 'familiar' | 'cerimonialista',
+    perfil: PerfilUsuario | '',
     cpf: string,
     data_nascimento: string,
     endereco_logradouro?: string,

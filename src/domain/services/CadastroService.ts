@@ -13,7 +13,7 @@ export interface CadastroService {
     nome: string,
     email: string,
     senha: string,
-    perfil: PerfilUsuario,
+    perfil: PerfilUsuario | '',
     cpf: string,
     data_nascimento: string,
     endereco_logradouro?: string,
@@ -32,7 +32,7 @@ export class CadastroServiceImpl implements CadastroService {
     nome: string,
     email: string,
     senha: string,
-    perfil: PerfilUsuario,
+    perfil: PerfilUsuario | '',
     cpf: string,
     data_nascimento: string,
     endereco_logradouro?: string,
@@ -83,7 +83,9 @@ export class CadastroServiceImpl implements CadastroService {
       throw new Error('Informe a data de nascimento.');
     }
 
-    this.validarMaioridade(dataNascimentoTratada);
+    const dataNascimentoBanco = this.normalizarDataNascimento(dataNascimentoTratada);
+
+    this.validarMaioridade(dataNascimentoBanco);
 
     const existente = await this.usuarioRepository.getByEmail(emailTratado);
 
@@ -101,7 +103,7 @@ export class CadastroServiceImpl implements CadastroService {
       senha_hash,
       perfil,
       cpf: cpfTratado,
-      data_nascimento: dataNascimentoTratada,
+      data_nascimento: dataNascimentoBanco,
       endereco_logradouro,
       endereco_numero,
       endereco_bairro,
@@ -117,11 +119,20 @@ export class CadastroServiceImpl implements CadastroService {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 
-  private validarMaioridade(dataNascimento: string): void {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(dataNascimento)) {
-      throw new Error('Data de nascimento invalida.');
+  private normalizarDataNascimento(dataNascimento: string): string {
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dataNascimento)) {
+      const [dia, mes, ano] = dataNascimento.split('/');
+      return `${ano}-${mes}-${dia}`;
     }
 
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dataNascimento)) {
+      return dataNascimento;
+    }
+
+    throw new Error('Data de nascimento invalida.');
+  }
+
+  private validarMaioridade(dataNascimento: string): void {
     const [anoStr, mesStr, diaStr] = dataNascimento.split('-');
 
     const ano = parseInt(anoStr, 10);
