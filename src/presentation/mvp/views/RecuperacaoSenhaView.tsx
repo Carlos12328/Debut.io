@@ -1,12 +1,19 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity,
-  StyleSheet, ActivityIndicator,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
+
 import {
   RecuperacaoSenhaPresenter,
   RecuperacaoSenhaView as IRecuperacaoSenhaView,
 } from '../presenters/RecuperacaoSenhaPresenter';
+
 import { SafeScreen } from '../../components/SafeScreen';
 
 interface Props {
@@ -14,114 +21,240 @@ interface Props {
   onVoltarLogin: () => void;
 }
 
-export function RecuperacaoSenhaView({ presenter, onVoltarLogin }: Props) {
-  const [etapa, setEtapa] = useState<'email' | 'nova-senha'>('email');
-  const [email, setEmail] = useState('');
-  const [novaSenha, setNovaSenha] = useState('');
-  const [confirmarSenha, setConfirmarSenha] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [erro, setErro] = useState<string | null>(null);
+type Etapa =
+  | 'email'
+  | 'codigo'
+  | 'nova-senha';
+
+export function RecuperacaoSenhaView({
+  presenter,
+  onVoltarLogin,
+}: Props) {
+
+  const [etapa, setEtapa] =
+    useState<Etapa>('email');
+
+  const [email, setEmail] =
+    useState('');
+
+  const [codigo, setCodigo] =
+    useState('');
+
+  const [novaSenha, setNovaSenha] =
+    useState('');
+
+  const [confirmarSenha,
+    setConfirmarSenha] =
+    useState('');
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [erro, setErro] =
+    useState<string | null>(null);
 
   useEffect(() => {
-    const view: IRecuperacaoSenhaView = {
-      showLoading: () => { setLoading(true); setErro(null); },
-      hideLoading: () => setLoading(false),
-      showError: (msg) => setErro(msg),
-      onEmailVerificado: () => { setErro(null); setEtapa('nova-senha'); },
-      onSenhaRedefinida: () => {
+    const view:
+      IRecuperacaoSenhaView = {
+
+      showLoading: () => {
+        setLoading(true);
         setErro(null);
+      },
+
+      hideLoading: () => {
+        setLoading(false);
+      },
+
+      showError: (msg) => {
+        setErro(msg);
+      },
+
+      onCodigoGerado:
+      (codigoGerado: string) => {
+        setErro(null);
+
+        Alert.alert(
+          'Código de verificação',
+          `Código enviado: ${codigoGerado}`
+        );
+
+        setEtapa('codigo');
+      },
+
+      onCodigoValidado: () => {
+        setErro(null);
+        setEtapa('nova-senha');
+      },
+
+      onSenhaRedefinida: () => {
+        Alert.alert(
+          'Sucesso',
+          'Senha redefinida com sucesso!'
+        );
+
         onVoltarLogin();
       },
     };
+
     presenter.attachView(view);
-    return () => presenter.detachView();
+
+    return () => {
+      presenter.detachView();
+    };
   }, [presenter, onVoltarLogin]);
+
+  function renderConteudo() {
+
+    if (etapa === 'email') {
+      return (
+        <>
+          <Text style={styles.instrucao}>
+            Informe seu e-mail
+            cadastrado.
+          </Text>
+
+          <TextInput
+            style={styles.input}
+            placeholder="E-mail"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+          />
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() =>
+              presenter.handleVerificarEmail(email)
+            }
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator
+                color="#fff"
+              />
+            ) : (
+              <Text
+                style={styles.buttonText}
+              >
+                Verificar email
+              </Text>
+            )}
+          </TouchableOpacity>
+        </>
+      );
+    }
+
+    if (etapa === 'codigo') {
+      return (
+        <>
+          <Text style={styles.instrucao}>
+            Digite o código
+            recebido.
+          </Text>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Código"
+            value={codigo}
+            onChangeText={(text) =>
+              setCodigo(
+                text
+                  .replace(/[^0-9]/g, '')
+                  .slice(0, 6)
+              )
+            }
+            keyboardType="numeric"
+            maxLength={6}
+          />
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() =>
+              presenter.handleValidarCodigo(
+                codigo
+              )
+            }
+          >
+            <Text
+              style={styles.buttonText}
+            >
+              Validar código
+            </Text>
+          </TouchableOpacity>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <Text style={styles.instrucao}>
+          Defina sua nova senha
+        </Text>
+
+        <TextInput
+          key="nova-senha"
+          style={styles.input}
+          placeholder="Nova senha"
+          value={novaSenha}
+          onChangeText={setNovaSenha}
+          secureTextEntry
+        />
+
+        <TextInput
+          key="confirmar-senha"
+          style={styles.input}
+          placeholder="Confirmar senha"
+          value={confirmarSenha}
+          onChangeText={setConfirmarSenha}
+          secureTextEntry
+        />
+
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() =>
+            presenter.handleRedefinirSenha(
+              novaSenha,
+              confirmarSenha
+            )
+          }
+        >
+          <Text
+            style={styles.buttonText}
+          >
+            Redefinir senha
+          </Text>
+        </TouchableOpacity>
+      </>
+    );
+  }
 
   return (
     <SafeScreen>
       <View style={styles.inner}>
-        <Text style={styles.title}>Debut.io</Text>
-        <Text style={styles.subtitle}>
-          {etapa === 'email' ? 'Recuperar senha' : 'Nova senha'}
+        <Text style={styles.title}>
+          Debut.io
         </Text>
 
-        {etapa === 'email' ? (
-          <>
-            <Text style={styles.instrucao}>
-              Informe o e-mail cadastrado na sua conta.
-            </Text>
+        <Text style={styles.subtitle}>
+          Recuperação de senha
+        </Text>
 
-            <TextInput
-              style={[styles.input, erro ? styles.inputErro : null]}
-              placeholder="E-mail"
-              value={email}
-              onChangeText={(t) => { setEmail(t); setErro(null); }}
-              autoCapitalize="none"
-              keyboardType="email-address"
-            />
-
-            {erro && (
-              <View style={styles.erroContainer}>
-                <Text style={styles.erroTexto}>{erro}</Text>
-              </View>
-            )}
-
-            <TouchableOpacity
-              style={[styles.button, loading && styles.buttonDesabilitado]}
-              onPress={() => presenter.handleVerificarEmail(email)}
-              disabled={loading}
-            >
-              {loading
-                ? <ActivityIndicator color="#fff" />
-                : <Text style={styles.buttonText}>Verificar e-mail</Text>
-              }
-            </TouchableOpacity>
-          </>
-        ) : (
-          <>
-            <Text style={styles.instrucao}>
-              Crie uma nova senha para a conta{'\n'}
-              <Text style={styles.emailDestaque}>{email}</Text>
-            </Text>
-
-            <TextInput
-              style={[styles.input, erro ? styles.inputErro : null]}
-              placeholder="Nova senha"
-              value={novaSenha}
-              onChangeText={(t) => { setNovaSenha(t); setErro(null); }}
-              secureTextEntry
-              maxLength={50}
-            />
-            <TextInput
-              style={[styles.input, erro ? styles.inputErro : null]}
-              placeholder="Confirmar nova senha"
-              value={confirmarSenha}
-              onChangeText={(t) => { setConfirmarSenha(t); setErro(null); }}
-              secureTextEntry
-              maxLength={50}
-            />
-
-            {erro && (
-              <View style={styles.erroContainer}>
-                <Text style={styles.erroTexto}>{erro}</Text>
-              </View>
-            )}
-
-            <TouchableOpacity
-              style={[styles.button, loading && styles.buttonDesabilitado]}
-              onPress={() => presenter.handleRedefinirSenha(email, novaSenha, confirmarSenha)}
-              disabled={loading}
-            >
-              {loading
-                ? <ActivityIndicator color="#fff" />
-                : <Text style={styles.buttonText}>Redefinir senha</Text>
-              }
-            </TouchableOpacity>
-          </>
+        {erro && (
+          <Text style={styles.erro}>
+            {erro}
+          </Text>
         )}
 
-        <TouchableOpacity onPress={onVoltarLogin} style={styles.linkContainer}>
-          <Text style={styles.link}>Voltar para o login</Text>
+        {renderConteudo()}
+
+        <TouchableOpacity
+          onPress={onVoltarLogin}
+        >
+          <Text style={styles.link}>
+            Voltar para login
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeScreen>
@@ -129,18 +262,62 @@ export function RecuperacaoSenhaView({ presenter, onVoltarLogin }: Props) {
 }
 
 const styles = StyleSheet.create({
-  inner: { flex: 1, justifyContent: 'center', padding: 24 },
-  title: { fontSize: 32, fontWeight: 'bold', color: '#9b59b6', textAlign: 'center', marginBottom: 4 },
-  subtitle: { fontSize: 16, color: '#888', textAlign: 'center', marginBottom: 24 },
-  instrucao: { fontSize: 14, color: '#555', textAlign: 'center', marginBottom: 20, lineHeight: 20 },
-  emailDestaque: { fontWeight: 'bold', color: '#9b59b6' },
-  input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 12, marginBottom: 8, fontSize: 16 },
-  inputErro: { borderColor: '#e74c3c' },
-  erroContainer: { backgroundColor: '#fdf0ee', borderRadius: 8, padding: 10, marginBottom: 16 },
-  erroTexto: { color: '#c0392b', fontSize: 13, lineHeight: 18 },
-  button: { backgroundColor: '#9b59b6', padding: 14, borderRadius: 8, alignItems: 'center', marginTop: 4 },
-  buttonDesabilitado: { opacity: 0.7 },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  linkContainer: { alignItems: 'center', marginTop: 16 },
-  link: { color: '#9b59b6', fontSize: 14 },
+  inner: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 24,
+  },
+
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#9b59b6',
+    textAlign: 'center',
+  },
+
+  subtitle: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 24,
+    color: '#777',
+  },
+
+  instrucao: {
+    marginBottom: 12,
+    textAlign: 'center',
+    color: '#555',
+  },
+
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+  },
+
+  button: {
+    backgroundColor: '#9b59b6',
+    padding: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+
+  erro: {
+    color: 'red',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+
+  link: {
+    textAlign: 'center',
+    color: '#9b59b6',
+    marginTop: 12,
+  },
 });
