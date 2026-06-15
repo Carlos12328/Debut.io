@@ -86,8 +86,8 @@ export function TarefaView({ presenter }: Props) {
           {item.descricao}
         </Text>
         <View style={styles.cardRodape}>
-          {item.prazo && <Text style={styles.infoTexto}>📅 {item.prazo.split('-').reverse().join('/')}</Text>}
-          {item.responsavel && <Text style={styles.infoTexto}>👤 {item.responsavel}</Text>}
+          {item.prazo && <Text style={styles.infoTexto}>Prazo: {item.prazo.split('-').reverse().join('/')}</Text>}
+          {item.responsavel && <Text style={styles.infoTexto}>Resp.: {item.responsavel}</Text>}
           <View style={[styles.statusBadge, {
             backgroundColor: item.status === 'concluida' ? '#e8f5e9' : item.status === 'em_andamento' ? '#fff3e0' : '#f5f5f5'
           }]}>
@@ -153,9 +153,9 @@ export function TarefaView({ presenter }: Props) {
         <View style={styles.modalOverlay}>
           <ScrollView contentContainerStyle={styles.modalContent}>
             <Text style={styles.modalTitulo}>Nova Tarefa</Text>
-            <TextInput style={styles.input} placeholder="Descrição da tarefa *" value={descricao} onChangeText={setDescricao} multiline />
-            <TextInput style={styles.input} placeholder="Responsável" value={responsavel} onChangeText={setResponsavel} />
-            <TextInput style={styles.input} placeholder="Prazo (AAAA-MM-DD)" value={prazo} onChangeText={setPrazo} />
+            <TextInput style={styles.input} placeholder="Descrição da tarefa *" value={descricao} onChangeText={setDescricao} multiline maxLength={200} />
+            <TextInput style={styles.input} placeholder="Responsável" value={responsavel} onChangeText={setResponsavel} maxLength={80} />
+            <TextInput style={styles.input} placeholder="Prazo (AAAA-MM-DD)" value={prazo} onChangeText={setPrazo} maxLength={10} />
             <Text style={styles.label}>Prioridade</Text>
             <View style={styles.prioridadeContainer}>
               {(['alta', 'media', 'baixa'] as PrioridadeTarefa[]).map(p => (
@@ -204,7 +204,7 @@ export function TarefaView({ presenter }: Props) {
               <View style={styles.statusContainer}>
                 {PROXIMOS_STATUS[modalDetalhe.status].map(s => (
                   <TouchableOpacity key={s} style={styles.statusBtn} onPress={() => presenter.handleAtualizarStatus(modalDetalhe.id_tarefa, s)}>
-                    <Text style={styles.statusBtnText}>→ {STATUS_LABEL[s]}</Text>
+                    <Text style={styles.statusBtnText}>{STATUS_LABEL[s]}</Text>
                   </TouchableOpacity>
                 ))}
               </View>

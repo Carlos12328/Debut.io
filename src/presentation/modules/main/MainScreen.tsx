@@ -30,7 +30,7 @@ export function MainScreen({ usuario, evento, onVoltarEventos }: Props) {
 
   const renderConteudo = () => {
     switch (abaAtual) {
-      case 'dashboard':    return <DashboardScreen evento={evento} />;
+      case 'dashboard':    return <DashboardScreen evento={evento} onVoltar={onVoltarEventos} />;
       case 'fornecedores': return <FornecedorScreen evento={evento} onVoltar={onVoltarEventos} />;
       case 'financeiro':   return <FinanceiroScreen evento={evento} />;
       case 'tarefas':      return <TarefasScreen evento={evento} />;
