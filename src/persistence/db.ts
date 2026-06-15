@@ -59,10 +59,14 @@ async function criarTabelas(db: SQLite.SQLiteDatabase) {
     );
 
     CREATE TABLE IF NOT EXISTS tarefa (
-      id_tarefa INTEGER PRIMARY KEY AUTOINCREMENT,
-      id_evento INTEGER,
-      descricao TEXT,
-      status    TEXT CHECK(status IN ('pendente','concluida')),
+      id_tarefa   INTEGER PRIMARY KEY AUTOINCREMENT,
+      id_evento   INTEGER,
+      descricao   TEXT,
+      categoria   TEXT DEFAULT 'outros',
+      status      TEXT CHECK(status IN ('pendente','em_andamento','concluida')) DEFAULT 'pendente',
+      prioridade  TEXT CHECK(prioridade IN ('alta','media','baixa')) DEFAULT 'media',
+      prazo       DATE,
+      responsavel TEXT,
       FOREIGN KEY(id_evento) REFERENCES evento(id_evento)
     );
 

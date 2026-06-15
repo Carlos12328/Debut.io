@@ -1,5 +1,9 @@
-import { TarefaServiceImpl } from '../../../domain/services/TarefaService';
-import { PrioridadeTarefa, StatusTarefa } from '../../../domain/models';
+﻿import { TarefaServiceImpl, AtualizarTarefaInput } from '../../../domain/services/TarefaService';
+import {
+  CategoriaTarefa,
+  PrioridadeTarefa,
+  StatusTarefa,
+} from '../../../domain/models';
 
 export class TarefaController {
   constructor(
@@ -9,14 +13,16 @@ export class TarefaController {
   async cadastrar(
     id_evento: number,
     descricao: string,
+    categoria: CategoriaTarefa,
     prioridade: PrioridadeTarefa,
-    prazo?: string,
-    responsavel?: string,
+    prazo: string,
+    responsavel: string,
   ) {
     try {
       const tarefa = await this.tarefaService.cadastrar(
         id_evento,
         descricao,
+        categoria,
         prioridade,
         prazo,
         responsavel,
@@ -24,7 +30,10 @@ export class TarefaController {
 
       return { sucesso: true, dados: tarefa };
     } catch (error: any) {
-      return { sucesso: false, erro: error.message };
+      return {
+        sucesso: false,
+        erro: error.message ?? 'Erro ao cadastrar tarefa.',
+      };
     }
   }
 
@@ -34,7 +43,29 @@ export class TarefaController {
 
       return { sucesso: true, dados: tarefas };
     } catch (error: any) {
-      return { sucesso: false, erro: error.message };
+      return {
+        sucesso: false,
+        erro: error.message ?? 'Erro ao listar tarefas.',
+      };
+    }
+  }
+
+  async editar(
+    id_tarefa: number,
+    dados: AtualizarTarefaInput,
+  ) {
+    try {
+      const tarefa = await this.tarefaService.editar(
+        id_tarefa,
+        dados,
+      );
+
+      return { sucesso: true, dados: tarefa };
+    } catch (error: any) {
+      return {
+        sucesso: false,
+        erro: error.message ?? 'Erro ao editar tarefa.',
+      };
     }
   }
 
@@ -43,15 +74,17 @@ export class TarefaController {
     status: StatusTarefa,
   ) {
     try {
-      const tarefa =
-        await this.tarefaService.atualizarStatus(
-          id_tarefa,
-          status,
-        );
+      const tarefa = await this.tarefaService.atualizarStatus(
+        id_tarefa,
+        status,
+      );
 
       return { sucesso: true, dados: tarefa };
     } catch (error: any) {
-      return { sucesso: false, erro: error.message };
+      return {
+        sucesso: false,
+        erro: error.message ?? 'Erro ao atualizar status da tarefa.',
+      };
     }
   }
 
@@ -61,7 +94,10 @@ export class TarefaController {
 
       return { sucesso: true };
     } catch (error: any) {
-      return { sucesso: false, erro: error.message };
+      return {
+        sucesso: false,
+        erro: error.message ?? 'Erro ao remover tarefa.',
+      };
     }
   }
 }
