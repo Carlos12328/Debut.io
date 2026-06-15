@@ -6,6 +6,9 @@ import { SafeScreen } from '../../components/SafeScreen';
 
 interface Props { presenter: DashboardPresenter; onVoltar: () => void; }
 
+const PRIORIDADE_COR: Record<string, string> = { alta: '#e74c3c', media: '#f39c12', baixa: '#27ae60' };
+const PRIORIDADE_LABEL: Record<string, string> = { alta: 'Alta', media: 'Media', baixa: 'Baixa' };
+
 export function DashboardView({ presenter, onVoltar }: Props) {
   const [dados, setDados] = useState<DashboardViewModel | null>(null);
   const [loading, setLoading] = useState(false);
@@ -93,9 +96,29 @@ export function DashboardView({ presenter, onVoltar }: Props) {
               <Text style={styles.cardTitle}>Proximas Tarefas Criticas</Text>
               {dados.proximasTarefas.length===0&&<Text style={styles.semTarefas}>Nenhuma tarefa pendente com prazo definido.</Text>}
               {dados.proximasTarefas.map(t=>(
-                <View key={t.id} style={styles.taskItem}>
-                  <Text style={styles.taskName} numberOfLines={1}>{t.nome}</Text>
+                <View key={t.id} style={[styles.taskItem, styles.taskItemPrioridade, { borderLeftColor: PRIORIDADE_COR[t.prioridade] ?? '#ccc' }]}>
+                  <View style={styles.taskInfo}>
+                    <Text style={styles.taskName} numberOfLines={1}>{t.nome}</Text>
+                    <Text style={[styles.taskPrioridade, { color: PRIORIDADE_COR[t.prioridade] ?? '#999' }]}>
+                      {PRIORIDADE_LABEL[t.prioridade] ?? t.prioridade}
+                    </Text>
+                  </View>
                   <View style={styles.taskBadge}><Text style={styles.taskPrazo}>{t.prazoFormatado}</Text></View>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.sectionGrid}>
+            <View style={styles.mainCard}>
+              <Text style={styles.cardTitle}>Proximos Compromissos</Text>
+              {dados.proximosCompromissos.length===0&&<Text style={styles.semTarefas}>Nenhum compromisso agendado.</Text>}
+              {dados.proximosCompromissos.map(c=>(
+                <View key={c.id} style={styles.taskItem}>
+                  <Text style={styles.taskName} numberOfLines={1}>{c.descricao}</Text>
+                  <View style={styles.taskBadge}>
+                    <Text style={styles.taskPrazo}>{c.dataFormatada}{c.horario ? ` ${c.horario}` : ''}</Text>
+                  </View>
                 </View>
               ))}
             </View>
@@ -135,6 +158,9 @@ const styles = StyleSheet.create({
   progressFill:{height:'100%',backgroundColor:'#7B2CBF',borderRadius:4},
   progressText:{fontSize:11,color:'#78909C',marginTop:6,textAlign:'right'},
   taskItem:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingVertical:12,borderBottomWidth:1,borderBottomColor:'#F5F5F5'},
+  taskItemPrioridade:{borderLeftWidth:4,paddingLeft:10,borderTopRightRadius:4,borderBottomRightRadius:4},
+  taskInfo:{flex:1,marginRight:8},
+  taskPrioridade:{fontSize:11,fontWeight:'600',marginTop:2},
   taskName:{fontSize:14,color:'#212121',flex:1,marginRight:8},
   taskBadge:{backgroundColor:'#F5F5F5',paddingVertical:4,paddingHorizontal:8,borderRadius:4},
   taskPrazo:{fontSize:12,color:'#616161'},

@@ -1,4 +1,8 @@
-export interface DashboardTarefaResumo { id: number; nome: string; prazoFormatado: string; }
+import { PrioridadeTarefa } from '../../../domain/models';
+
+export interface DashboardTarefaResumo { id: number; nome: string; prazoFormatado: string; prioridade: PrioridadeTarefa; }
+
+export interface DashboardCompromissoResumo { id: number; descricao: string; dataFormatada: string; horario: string; }
 
 export interface DashboardViewModel {
   nomeEvento: string;
@@ -10,4 +14,5 @@ export interface DashboardViewModel {
   percentualComprometido: number;
   pendenciasLabel: string;
   proximasTarefas: DashboardTarefaResumo[];
+  proximosCompromissos: DashboardCompromissoResumo[];
 }
