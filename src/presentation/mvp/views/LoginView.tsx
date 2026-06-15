@@ -15,12 +15,16 @@ export function LoginView({ presenter, onLoginSuccess, onIrParaCadastro, onIrPar
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
     const view: ILoginView = {
-      showLoading: () => setLoading(true),
+      showLoading: () => {
+        setLoading(true);
+        setErro(null);
+      },
       hideLoading: () => setLoading(false),
-      showError: (msg) => Alert.alert('Erro', msg),
+      showError: (msg) => setErro(msg),
       onLoginSuccess,
     };
     presenter.attachView(view);
@@ -32,6 +36,12 @@ export function LoginView({ presenter, onLoginSuccess, onIrParaCadastro, onIrPar
       <View style={styles.inner}>
         <Text style={styles.title}>Debut.io</Text>
         <Text style={styles.subtitle}>Acesse sua conta</Text>
+
+        {erro && (
+          <Text style={styles.erro}>
+            {erro}
+          </Text>
+        )}
 
         <TextInput
           style={styles.input}
@@ -82,5 +92,6 @@ const styles = StyleSheet.create({
   button: { backgroundColor: '#9b59b6', padding: 14, borderRadius: 8, alignItems: 'center' },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   linkContainer: { alignItems: 'center', marginTop: 16 },
+  erro: { color: 'red', marginBottom: 12, textAlign: 'center' },
   link: { color: '#9b59b6', fontSize: 14 },
 });
