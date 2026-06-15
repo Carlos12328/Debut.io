@@ -17,11 +17,11 @@ interface Props {
 }
 
 const ABAS: { id: Aba; label: string }[] = [
-  { id: 'dashboard',    label: 'Inicio'     },
-  { id: 'fornecedores', label: 'Fornecedor' },
-  { id: 'financeiro',   label: 'Financas'   },
-  { id: 'tarefas',      label: 'Tarefas'    },
-  { id: 'agenda',       label: 'Agenda'     },
+  { id: 'dashboard', label: 'Início' },
+  { id: 'fornecedores', label: 'Fornec.' },
+  { id: 'financeiro', label: 'Finanças' },
+  { id: 'tarefas', label: 'Tarefas' },
+  { id: 'agenda', label: 'Agenda' },
 ];
 
 export function MainScreen({ usuario, evento, onVoltarEventos }: Props) {
@@ -30,19 +30,25 @@ export function MainScreen({ usuario, evento, onVoltarEventos }: Props) {
 
   const renderConteudo = () => {
     switch (abaAtual) {
-      case 'dashboard':    return <DashboardScreen evento={evento} onVoltar={onVoltarEventos} />;
-      case 'fornecedores': return <FornecedorScreen evento={evento} onVoltar={onVoltarEventos} />;
-      case 'financeiro':   return <FinanceiroScreen evento={evento} />;
-      case 'tarefas':      return <TarefasScreen evento={evento} />;
-      case 'agenda':       return <AgendaScreen evento={evento} />;
+      case 'dashboard':
+        return <DashboardScreen evento={evento} onVoltar={onVoltarEventos} />;
+
+      case 'fornecedores':
+        return <FornecedorScreen evento={evento} onVoltar={onVoltarEventos} />;
+
+      case 'financeiro':
+        return <FinanceiroScreen evento={evento} />;
+
+      case 'tarefas':
+        return <TarefasScreen evento={evento} />;
+
+      case 'agenda':
+        return <AgendaScreen evento={evento} />;
     }
   };
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-
-      {/* Cabeçalho redundante removido para evitar duplicação */}
-
       <View style={styles.conteudo}>
         {renderConteudo()}
       </View>
@@ -55,28 +61,72 @@ export function MainScreen({ usuario, evento, onVoltarEventos }: Props) {
             onPress={() => setAbaAtual(aba.id)}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Text style={[styles.tabLabel, abaAtual === aba.id && styles.tabLabelAtivo]}>
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.75}
+              style={[
+                styles.tabLabel,
+                abaAtual === aba.id && styles.tabLabelAtivo,
+              ]}
+            >
               {aba.label}
             </Text>
+
             {abaAtual === aba.id && <View style={styles.tabIndicador} />}
           </TouchableOpacity>
         ))}
       </View>
-
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container:      { flex: 1, backgroundColor: '#f5f5f5' },
-  header:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#9b59b6', paddingHorizontal: 16, paddingVertical: 14 },
-  btnVoltar:      { color: '#fff', fontSize: 14, paddingRight: 8 },
-  headerTitulo:   { flex: 1, fontSize: 15, fontWeight: '500', color: '#fff', textAlign: 'center', marginHorizontal: 8 },
-  headerPerfil:   { fontSize: 11, color: '#e8d5f5' },
-  conteudo:       { flex: 1 },
-  tabBar:         { flexDirection: 'row', backgroundColor: '#fff', borderTopWidth: 0.5, borderTopColor: '#ddd' },
-  tab:            { flex: 1, alignItems: 'center', paddingVertical: 12, position: 'relative' },
-  tabLabel:       { fontSize: 11, color: '#aaa' },
-  tabLabelAtivo:  { color: '#9b59b6', fontWeight: '500' },
-  tabIndicador:   { position: 'absolute', bottom: 0, width: 24, height: 3, backgroundColor: '#9b59b6', borderRadius: 2 },
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+
+  conteudo: {
+    flex: 1,
+  },
+
+  tabBar: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderTopWidth: 0.5,
+    borderTopColor: '#ddd',
+  },
+
+  tab: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 2,
+    position: 'relative',
+  },
+
+  tabLabel: {
+    width: '100%',
+    fontSize: 10,
+    color: '#777',
+    textAlign: 'center',
+    includeFontPadding: false,
+  },
+
+  tabLabelAtivo: {
+    color: '#9b59b6',
+    fontWeight: '700',
+  },
+
+  tabIndicador: {
+    position: 'absolute',
+    bottom: 0,
+    width: 24,
+    height: 3,
+    backgroundColor: '#9b59b6',
+    borderRadius: 2,
+  },
 });

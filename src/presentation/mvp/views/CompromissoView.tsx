@@ -356,7 +356,6 @@ export function CompromissoView({ presenter }: Props) {
               placeholder="Ex.: Prova de vestido"
               value={descricao}
               onChangeText={setDescricao}
-              maxLength={100}
             />
 
             <Text style={styles.label}>Data *</Text>
@@ -387,7 +386,6 @@ export function CompromissoView({ presenter }: Props) {
               onChangeText={setObservacoes}
               multiline
               textAlignVertical="top"
-              maxLength={300}
             />
 
             <View style={styles.switchContainer}>
