@@ -26,9 +26,9 @@ export class CadastroPresenter {
     email: string,
     senha: string,
     confirmarSenha: string,
-    perfil: PerfilUsuario,
+    perfil: PerfilUsuario | '',
     cpf: string,
-    data_nascimento?: string,
+    data_nascimento: string,
     endereco_logradouro?: string,
     endereco_numero?: string,
     endereco_bairro?: string,
@@ -38,7 +38,12 @@ export class CadastroPresenter {
   ) {
     if (!this.view) return;
 
-    if (senha !== confirmarSenha) {
+    if (senha && !confirmarSenha) {
+      this.view.showError('Confirme sua senha.');
+      return;
+    }
+
+    if (senha && confirmarSenha && senha !== confirmarSenha) {
       this.view.showError('As senhas nao coincidem.');
       return;
     }
