@@ -1,4 +1,4 @@
-import { CompromissoServiceImpl } from '../../../domain/services/CompromissoService';
+﻿import { CompromissoServiceImpl } from '../../../domain/services/CompromissoService';
 
 export class CompromissoController {
   constructor(
@@ -9,6 +9,9 @@ export class CompromissoController {
     id_evento: number,
     descricao: string,
     data_compromisso: string,
+    horario?: string,
+    observacoes?: string,
+    alerta_configurado?: boolean,
   ) {
     try {
       const compromisso =
@@ -16,6 +19,40 @@ export class CompromissoController {
           id_evento,
           descricao,
           data_compromisso,
+          horario,
+          observacoes,
+          alerta_configurado,
+        );
+
+      return {
+        sucesso: true,
+        dados: compromisso,
+      };
+    } catch (error: any) {
+      return {
+        sucesso: false,
+        erro: error.message,
+      };
+    }
+  }
+
+  async atualizar(
+    id_compromisso: number,
+    descricao: string,
+    data_compromisso: string,
+    horario?: string,
+    observacoes?: string,
+    alerta_configurado?: boolean,
+  ) {
+    try {
+      const compromisso =
+        await this.compromissoService.atualizar(
+          id_compromisso,
+          descricao,
+          data_compromisso,
+          horario,
+          observacoes,
+          alerta_configurado,
         );
 
       return {
@@ -49,9 +86,7 @@ export class CompromissoController {
 
   async remover(id_compromisso: number) {
     try {
-      await this.compromissoService.remover(
-        id_compromisso,
-      );
+      await this.compromissoService.remover(id_compromisso);
 
       return { sucesso: true };
     } catch (error: any) {

@@ -5,3 +5,4 @@ export * from './FornecedorService';
 export * from './PagamentoService';
 export * from './TarefaService';
 export * from './CompromissoService';
+export * from './RecuperacaoSenhaService';
