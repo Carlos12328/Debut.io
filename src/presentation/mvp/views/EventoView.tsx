@@ -8,9 +8,10 @@ import { SafeScreen } from '../../components/SafeScreen';
 interface Props {
   presenter: EventoPresenter;
   onSelecionarEvento: (evento: Evento) => void;
+  onLogout: () => void;
 }
 
-export function EventoView({ presenter, onSelecionarEvento }: Props) {
+export function EventoView({ presenter, onSelecionarEvento, onLogout }: Props) {
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -173,6 +174,17 @@ export function EventoView({ presenter, onSelecionarEvento }: Props) {
     );
   }
 };
+  const confirmarSair = () => {
+    if (Platform.OS === 'web') {
+      if ((window as any).confirm('Deseja sair da sua conta?')) onLogout();
+    } else {
+      Alert.alert('Sair', 'Deseja sair da sua conta?', [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Sair', style: 'destructive', onPress: onLogout },
+      ]);
+    }
+  };
+
   const renderEvento = ({ item }: { item: Evento }) => (
   <View style={styles.card}>
     <TouchableOpacity style={styles.cardToque} onPress={() => onSelecionarEvento(item)}>
@@ -292,6 +304,14 @@ export function EventoView({ presenter, onSelecionarEvento }: Props) {
           </ScrollView>
         </View>
       </Modal>
+
+      <TouchableOpacity
+        style={[styles.botaoSair, { bottom: insets.bottom + 20 }]}
+        onPress={confirmarSair}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
+        <Text style={styles.botaoSairTexto}>Sair</Text>
+      </TouchableOpacity>
   </SafeScreen>
 );
 }
@@ -333,4 +353,20 @@ const styles = StyleSheet.create({
   badgeTextEncerrado: { color: '#c0392b', fontWeight: '700' },
   btnAcaoDesativo: { backgroundColor: '#f0f0f0', borderRightWidth: 0.5, borderRightColor: '#eee' },
   btnTextoDesativo: { color: '#bbb' },
+  botaoSair: {
+    position: 'absolute',
+    right: 16,
+    backgroundColor: '#fff',
+    borderWidth: 1.5,
+    borderColor: '#e74c3c',
+    paddingHorizontal: 22,
+    paddingVertical: 11,
+    borderRadius: 24,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  botaoSairTexto: { color: '#e74c3c', fontWeight: 'bold', fontSize: 14 },
 });

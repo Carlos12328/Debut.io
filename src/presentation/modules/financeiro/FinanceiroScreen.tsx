@@ -1,11 +1,15 @@
-﻿import React, { useMemo, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { FinanceiroView } from '../../mvp/views/FinanceiroView';
+import { FinanceiroPresenter } from '../../mvp/presenters/FinanceiroPresenter';
 import { PagamentoView } from '../../mvp/views/PagamentoView';
 import { PagamentoPresenter } from '../../mvp/presenters/PagamentoPresenter';
+import { FornecedorServiceImpl } from '../../../domain/services';
 import { PagamentoServiceImpl } from '../../../domain/services/PagamentoService';
+import { FornecedorController } from '../../../application/api/controllers/FornecedorController';
+import { PagamentoController } from '../../../application/api/controllers/PagamentoController';
+import { FornecedorSupabaseRepository } from '../../../persistence/repositories/FornecedorSupabaseRepository';
 import { PagamentoSupabaseRepository } from '../../../persistence/repositories/PagamentoSupabaseRepository';
 import { Evento, Fornecedor } from '../../../domain/models';
-import { SafeScreen } from '../../components/SafeScreen';
 
 interface Props {
   evento: Evento;
@@ -14,41 +18,40 @@ interface Props {
 export function FinanceiroScreen({ evento }: Props) {
   const [fornecedorSelecionado, setFornecedorSelecionado] = useState<Fornecedor | null>(null);
 
-  const presenter = useMemo(() => {
+  const financeiroPresenter = useMemo(() => {
+    const fornecedorController = new FornecedorController(
+      new FornecedorServiceImpl(new FornecedorSupabaseRepository()),
+    );
+    const pagamentoController = new PagamentoController(
+      new PagamentoServiceImpl(new PagamentoSupabaseRepository()),
+    );
+    return new FinanceiroPresenter(fornecedorController, pagamentoController, evento.id_evento);
+  }, [evento.id_evento]);
+
+  const pagamentoPresenter = useMemo(() => {
     if (!fornecedorSelecionado) return null;
-    const repo = new PagamentoSupabaseRepository();
-    const service = new PagamentoServiceImpl(repo);
-    return new PagamentoPresenter(service);
+    const controller = new PagamentoController(
+      new PagamentoServiceImpl(new PagamentoSupabaseRepository()),
+    );
+    return new PagamentoPresenter(controller);
   }, [fornecedorSelecionado]);
 
-  if (fornecedorSelecionado && presenter) {
+  if (fornecedorSelecionado && pagamentoPresenter) {
     return (
       <PagamentoView
-        presenter={presenter}
+        presenter={pagamentoPresenter}
         id_fornecedor={fornecedorSelecionado.id_fornecedor}
         nomeFornecedor={fornecedorSelecionado.nome}
+        dataEvento={evento.data_evento}
         onVoltar={() => setFornecedorSelecionado(null)}
       />
     );
   }
 
   return (
-    <SafeScreen backgroundColor="#f5f5f5">
-      <View style={styles.header}>
-        <Text style={styles.titulo}>Financeiro</Text>
-      </View>
-      <View style={styles.vazio}>
-        <Text style={styles.vazioText}>Selecione um fornecedor</Text>
-        <Text style={styles.vazioSub}>Va ate a aba Fornecedor, clique no fornecedor e registre os pagamentos por la.</Text>
-      </View>
-    </SafeScreen>
+    <FinanceiroView
+      presenter={financeiroPresenter}
+      onSelecionarFornecedor={setFornecedorSelecionado}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  header:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',padding:16,backgroundColor:'#9b59b6'},
-  titulo:{fontSize:20,fontWeight:'bold',color:'#fff'},
-  vazio:{flex:1,justifyContent:'center',alignItems:'center',padding:24},
-  vazioText:{fontSize:16,color:'#888',textAlign:'center'},
-  vazioSub:{fontSize:13,color:'#bbb',marginTop:8,textAlign:'center',lineHeight:20},
-});

@@ -1,5 +1,5 @@
-import { EventoService } from '../../../domain/services';
 import { Evento } from '../../../domain/models';
+import { EventoController } from '../../../application/api/controllers/EventoController';
 
 export interface EventoView {
   showLoading(): void;
@@ -15,7 +15,7 @@ export class EventoPresenter {
   private view: EventoView | null = null;
 
   constructor(
-    private readonly eventoService: EventoService,
+    private readonly eventoController: EventoController,
     private readonly id_usuario: number
   ) {}
 
@@ -26,8 +26,12 @@ export class EventoPresenter {
     if (!this.view) return;
     this.view.showLoading();
     try {
-      const eventos = await this.eventoService.listar(this.id_usuario);
-      this.view.onEventosCargados(eventos);
+      const resposta = await this.eventoController.listar(this.id_usuario);
+      if (!resposta.sucesso || !resposta.dados) {
+        this.view.showError(resposta.erro ?? 'Erro ao carregar eventos.');
+        return;
+      }
+      this.view.onEventosCargados(resposta.dados);
     } catch (error: any) {
       this.view.showError(error.message ?? 'Erro ao carregar eventos.');
     } finally {
@@ -44,8 +48,12 @@ export class EventoPresenter {
     }
     this.view.showLoading();
     try {
-      const evento = await this.eventoService.cadastrar(this.id_usuario, nome, data_evento, orcamentoNum);
-      this.view.onEventoCadastrado(evento);
+      const resposta = await this.eventoController.cadastrar(this.id_usuario, nome, data_evento, orcamentoNum);
+      if (!resposta.sucesso || !resposta.dados) {
+        this.view.showError(resposta.erro ?? 'Erro ao cadastrar evento.');
+        return;
+      }
+      this.view.onEventoCadastrado(resposta.dados);
     } catch (error: any) {
       this.view.showError(error.message ?? 'Erro ao cadastrar evento.');
     } finally {
@@ -62,8 +70,12 @@ export class EventoPresenter {
     }
     this.view.showLoading();
     try {
-      const evento = await this.eventoService.editar(id_evento, nome, data_evento, orcamentoNum);
-      this.view.onEventoAtualizado(evento);
+      const resposta = await this.eventoController.editar(id_evento, nome, data_evento, orcamentoNum);
+      if (!resposta.sucesso || !resposta.dados) {
+        this.view.showError(resposta.erro ?? 'Erro ao editar evento.');
+        return;
+      }
+      this.view.onEventoAtualizado(resposta.dados);
     } catch (error: any) {
       this.view.showError(error.message ?? 'Erro ao editar evento.');
     } finally {
@@ -75,8 +87,12 @@ export class EventoPresenter {
     if (!this.view) return;
     this.view.showLoading();
     try {
-      const evento = await this.eventoService.encerrar(id_evento);
-      this.view.onEventoEncerrado(evento);
+      const resposta = await this.eventoController.encerrar(id_evento);
+      if (!resposta.sucesso || !resposta.dados) {
+        this.view.showError(resposta.erro ?? 'Erro ao encerrar evento.');
+        return;
+      }
+      this.view.onEventoEncerrado(resposta.dados);
     } catch (error: any) {
       this.view.showError(error.message ?? 'Erro ao encerrar evento.');
     } finally {

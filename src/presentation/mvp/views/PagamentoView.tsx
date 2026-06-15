@@ -11,10 +11,11 @@ interface Props {
   presenter: PagamentoPresenter;
   id_fornecedor: number;
   nomeFornecedor: string;
+  dataEvento: string;
   onVoltar: () => void;
 }
 
-export function PagamentoView({ presenter, id_fornecedor, nomeFornecedor, onVoltar }: Props) {
+export function PagamentoView({ presenter, id_fornecedor, nomeFornecedor, dataEvento, onVoltar }: Props) {
   const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisivel, setModalVisivel] = useState(false);
@@ -50,6 +51,11 @@ export function PagamentoView({ presenter, id_fornecedor, nomeFornecedor, onVolt
     return `${dd}/${mm}/${aaaa}`;
   };
 
+  const mostrarAlerta = (titulo: string, msg: string) => {
+    if (Platform.OS === 'web') (window as any).alert(msg);
+    else Alert.alert(titulo, msg);
+  };
+
   const validarData = (data: string): string => {
     if (data.length < 10) return '';
     const [ddStr,mmStr,aaaaStr] = data.split('/');
@@ -61,6 +67,8 @@ export function PagamentoView({ presenter, id_fornecedor, nomeFornecedor, onVolt
     if (dd<1||dd>diasNoMes) return `Dia invalido. Maximo: ${diasNoMes}.`;
     if (aaaaStr.length!==4) return 'Ano invalido.';
     if (converterParaBanco(data)<hojeBanco) return 'Vencimento nao pode ser no passado.';
+    if (dataEvento && converterParaBanco(data)>dataEvento)
+      return `Vencimento nao pode ser apos a data do evento (${converterParaExibicao(dataEvento)}).`;
     return '';
   };
 
@@ -68,7 +76,7 @@ export function PagamentoView({ presenter, id_fornecedor, nomeFornecedor, onVolt
     const view: IPagamentoView = {
       showLoading: () => setLoading(true),
       hideLoading: () => setLoading(false),
-      showError: (msg) => Alert.alert('Erro', msg),
+      showError: (msg) => mostrarAlerta('Erro', msg),
       onPagamentosCarregados: (lista) => setPagamentos(lista),
       onPagamentoRegistrado: (p) => {
         setPagamentos(prev => [...prev, p]);
@@ -79,11 +87,12 @@ export function PagamentoView({ presenter, id_fornecedor, nomeFornecedor, onVolt
       onPagamentoRemovido: (id) => setPagamentos(prev => prev.filter(x => x.id_pagamento!==id)),
     };
     presenter.attachView(view);
+    presenter.carregarPagamentos(id_fornecedor);
     return () => presenter.detachView();
-  }, [presenter]);
+  }, [presenter, id_fornecedor]);
 
   const confirmarPagar = (p: Pagamento) => {
-    if (p.status==='pago') { Alert.alert('Aviso','Este pagamento ja foi confirmado.'); return; }
+    if (p.status==='pago') { mostrarAlerta('Aviso','Este pagamento ja foi confirmado.'); return; }
     if (Platform.OS==='web') {
       if ((window as any).confirm(`Confirmar pagamento de R$ ${Number(p.valor).toFixed(2).replace('.',',')}?`))
         presenter.handlePagar(p.id_pagamento);
@@ -107,10 +116,10 @@ export function PagamentoView({ presenter, id_fornecedor, nomeFornecedor, onVolt
   };
 
   const handleSalvar = () => {
-    if (!valor) { Alert.alert('Erro','Informe o valor.'); return; }
-    if (!vencimento||vencimento.length<10) { Alert.alert('Erro','Informe a data completa DD/MM/AAAA.'); return; }
+    if (!valor) { mostrarAlerta('Erro','Informe o valor.'); return; }
+    if (!vencimento||vencimento.length<10) { mostrarAlerta('Erro','Informe a data completa DD/MM/AAAA.'); return; }
     const erro = validarData(vencimento);
-    if (erro) { Alert.alert('Data invalida',erro); return; }
+    if (erro) { mostrarAlerta('Data invalida',erro); return; }
     presenter.handleRegistrar(id_fornecedor, valor.replace(/\./g,'').replace(',','.'), converterParaBanco(vencimento));
   };
 
@@ -180,7 +189,7 @@ export function PagamentoView({ presenter, id_fornecedor, nomeFornecedor, onVolt
               keyboardType="numeric"
               maxLength={14}
             />
-            <Text style={styles.labelData}>Vencimento minimo: {hojeExibicao}</Text>
+            <Text style={styles.labelData}>Vencimento entre {hojeExibicao} e {converterParaExibicao(dataEvento)}</Text>
             <TextInput
               style={[styles.input, erroData ? styles.inputErro : null]}
               placeholder="Vencimento (DD/MM/AAAA) *"
