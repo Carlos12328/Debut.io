@@ -6,6 +6,5 @@ export * from './FornecedorViewModel';
 export * from './PagamentoViewModel';
 export * from './FinanceiroViewModel';
 export * from './TarefaViewModel';
-export * from './AgendaViewModel';
 export * from './CompromissoViewModel';
 export * from './DashboardViewModel';
