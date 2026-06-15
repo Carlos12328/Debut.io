@@ -4,6 +4,7 @@ import { PagamentoRepository } from '../../persistence/repositories';
 export interface PagamentoService {
   registrar(id_fornecedor: number, valor: number, vencimento: string): Promise<Pagamento>;
   listarPorFornecedor(id_fornecedor: number): Promise<Pagamento[]>;
+  listarPorEvento(id_evento: number): Promise<Pagamento[]>;
   pagar(id_pagamento: number): Promise<Pagamento>;
   remover(id_pagamento: number): Promise<void>;
 }
@@ -25,6 +26,10 @@ export class PagamentoServiceImpl implements PagamentoService {
 
   async listarPorFornecedor(id_fornecedor: number): Promise<Pagamento[]> {
     return await this.pagamentoRepository.list();
+  }
+
+  async listarPorEvento(id_evento: number): Promise<Pagamento[]> {
+    return await this.pagamentoRepository.getByEvento(id_evento);
   }
 
   async pagar(id_pagamento: number): Promise<Pagamento> {

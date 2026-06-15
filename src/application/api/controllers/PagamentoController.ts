@@ -21,6 +21,15 @@ export class PagamentoController {
     }
   }
 
+  async listarPorEvento(id_evento: number) {
+    try {
+      const pagamentos = await this.pagamentoService.listarPorEvento(id_evento);
+      return { sucesso: true, dados: pagamentos };
+    } catch (error: any) {
+      return { sucesso: false, erro: error.message };
+    }
+  }
+
   async pagar(id_pagamento: number) {
     try {
       const pagamento = await this.pagamentoService.pagar(id_pagamento);
