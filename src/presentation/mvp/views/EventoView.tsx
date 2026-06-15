@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, FlatList, Modal, ScrollView, Platform, StatusBar } from 'react-native';
+import {View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, FlatList, Modal, ScrollView, Platform, StatusBar, } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { EventoPresenter, EventoView as IEventoView } from '../presenters/EventoPresenter';
 import { Evento } from '../../../domain/models';
@@ -8,61 +8,91 @@ import { SafeScreen } from '../../components/SafeScreen';
 interface Props {
   presenter: EventoPresenter;
   onSelecionarEvento: (evento: Evento) => void;
-  onLogout: () => void;
 }
 
-export function EventoView({ presenter, onSelecionarEvento, onLogout }: Props) {
+export function EventoView({ presenter, onSelecionarEvento }: Props) {
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Modal de criar
   const [modalVisivel, setModalVisivel] = useState(false);
   const [nome, setNome] = useState('');
   const [dataEvento, setDataEvento] = useState('');
   const [orcamento, setOrcamento] = useState('');
   const [erroData, setErroData] = useState('');
+  const insets = useSafeAreaInsets();
+  const topoSeguro = Platform.OS === 'ios'
+  ? Math.max(insets.top, 59)
+  : (StatusBar.currentHeight ?? 24);
+
+  // Modal de editar
   const [modalEditarVisivel, setModalEditarVisivel] = useState(false);
   const [eventoEditando, setEventoEditando] = useState<Evento | null>(null);
   const [nomeEditar, setNomeEditar] = useState('');
   const [dataEditar, setDataEditar] = useState('');
   const [orcamentoEditar, setOrcamentoEditar] = useState('');
   const [erroDataEditar, setErroDataEditar] = useState('');
-  const insets = useSafeAreaInsets();
 
   const hojeObj = new Date();
   const hojeExibicao = `${String(hojeObj.getDate()).padStart(2, '0')}/${String(hojeObj.getMonth() + 1).padStart(2, '0')}/${hojeObj.getFullYear()}`;
   const hojeBanco = hojeObj.toISOString().split('T')[0];
 
-  const aplicarMascaraData = (v: string) => {
-    const n = v.replace(/\D/g, '').slice(0, 8);
-    if (n.length <= 2) return n;
-    if (n.length <= 4) return `${n.slice(0, 2)}/${n.slice(2)}`;
-    return `${n.slice(0, 2)}/${n.slice(2, 4)}/${n.slice(4)}`;
+  const aplicarMascaraData = (valor: string): string => {
+    const numeros = valor.replace(/\D/g, '').slice(0, 8);
+    if (numeros.length <= 2) return numeros;
+    if (numeros.length <= 4) return `${numeros.slice(0, 2)}/${numeros.slice(2)}`;
+    return `${numeros.slice(0, 2)}/${numeros.slice(2, 4)}/${numeros.slice(4)}`;
   };
 
-  const aplicarMascaraOrcamento = (v: string) => {
-    const n = v.replace(/\D/g, '').slice(0, 9);
+  const aplicarMascaraOrcamento = (valor: string): string => {
+    const n = valor.replace(/\D/g, '').slice(0, 9);
     if (!n) return '';
-    return (parseInt(n, 10) / 100).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    const inteiro = parseInt(n, 10);
+    return (inteiro / 100)
+      .toFixed(2)
+      .replace('.', ',')
+      .replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   };
 
-  const converterParaBanco = (d: string) => { const [dd, mm, aa] = d.split('/'); return `${aa}-${mm}-${dd}`; };
-  const converterParaExibicao = (d: string) => { if (!d || !d.includes('-')) return d; const [aa, mm, dd] = d.split('-'); return `${dd}/${mm}/${aa}`; };
-  const formatarOrcamento = (v: number) => Number(v).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  const converterParaBanco = (data: string): string => {
+    const [dd, mm, aaaa] = data.split('/');
+    return `${aaaa}-${mm}-${dd}`;
+  };
 
-  const validarDataEvento = (data: string) => {
+  const converterParaExibicao = (data: string): string => {
+    if (!data || !data.includes('-')) return data;
+    const [aaaa, mm, dd] = data.split('-');
+    return `${dd}/${mm}/${aaaa}`;
+  };
+
+  const formatarOrcamento = (valor: number): string => {
+    return Number(valor)
+      .toFixed(2)
+      .replace('.', ',')
+      .replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  };
+
+  const validarDataEvento = (data: string): string => {
     if (data.length < 10) return '';
-    const [ddS, mmS, aaS] = data.split('/');
-    const dd = parseInt(ddS, 10), mm = parseInt(mmS, 10), aa = parseInt(aaS, 10);
-    if (mm < 1 || mm > 12) return 'Mes invalido.';
-    const dias = new Date(aa, mm, 0).getDate();
-    if (dd < 1 || dd > dias) return `Dia invalido. Maximo: ${dias}.`;
-    if (aaS.length !== 4) return 'Ano invalido.';
-    if (converterParaBanco(data) < hojeBanco) return 'A data do evento nao pode ser no passado.';
-    if (aa > hojeObj.getFullYear() + 15) return `Ano maximo: ${hojeObj.getFullYear() + 15}.`;
+    const [ddStr, mmStr, aaaaStr] = data.split('/');
+    const dd = parseInt(ddStr, 10);
+    const mm = parseInt(mmStr, 10);
+    const aaaa = parseInt(aaaaStr, 10);
+    if (mm < 1 || mm > 12) return 'Mes invalido. Use um valor entre 01 e 12.';
+    const diasNoMes = new Date(aaaa, mm, 0).getDate();
+    if (dd < 1 || dd > diasNoMes) return `Dia invalido. O mes informado tem no maximo ${diasNoMes} dias.`;
+    if (aaaaStr.length !== 4) return 'Ano invalido.';
+    const dataBanco = converterParaBanco(data);
+    if (dataBanco < hojeBanco) return 'A data do evento nao pode ser uma data passada.';
+    const anoMaximo = hojeObj.getFullYear() + 15;
+    if (aaaa > anoMaximo) return `O ano maximo permitido e ${anoMaximo}.`;
     return '';
   };
 
-  const handleChangeData = (t: string, setD: Function, setE: Function) => {
-    const f = aplicarMascaraData(t); setD(f); setE(f.length === 10 ? validarDataEvento(f) : '');
+  const handleChangeData = (texto: string, setData: Function, setErro: Function) => {
+    const formatado = aplicarMascaraData(texto);
+    setData(formatado);
+    setErro(formatado.length === 10 ? validarDataEvento(formatado) : '');
   };
 
   useEffect(() => {
@@ -71,9 +101,19 @@ export function EventoView({ presenter, onSelecionarEvento, onLogout }: Props) {
       hideLoading: () => setLoading(false),
       showError: (msg) => Alert.alert('Erro', msg),
       onEventosCargados: (lista) => setEventos(lista),
-      onEventoCadastrado: (e) => { setEventos(prev => [...prev, e]); setModalVisivel(false); setNome(''); setDataEvento(''); setOrcamento(''); setErroData(''); },
-      onEventoAtualizado: (e) => { setEventos(prev => prev.map(x => x.id_evento === e.id_evento ? e : x)); setModalEditarVisivel(false); setEventoEditando(null); },
-      onEventoEncerrado: (e) => setEventos(prev => prev.map(x => x.id_evento === e.id_evento ? e : x)),
+      onEventoCadastrado: (evento) => {
+        setEventos(prev => [...prev, evento]);
+        setModalVisivel(false);
+        setNome(''); setDataEvento(''); setOrcamento(''); setErroData('');
+      },
+      onEventoAtualizado: (evento) => {
+        setEventos(prev => prev.map(e => e.id_evento === evento.id_evento ? evento : e));
+        setModalEditarVisivel(false);
+        setEventoEditando(null);
+      },
+      onEventoEncerrado: (evento) => {
+        setEventos(prev => prev.map(e => e.id_evento === evento.id_evento ? evento : e));
+      },
     };
     presenter.attachView(view);
     presenter.carregarEventos();
@@ -82,98 +122,111 @@ export function EventoView({ presenter, onSelecionarEvento, onLogout }: Props) {
 
   const handleSalvar = () => {
     if (!nome) { Alert.alert('Erro', 'O nome do evento e obrigatorio.'); return; }
-    if (!dataEvento || dataEvento.length < 10) { Alert.alert('Erro', 'Informe a data no formato DD/MM/AAAA.'); return; }
-    const erroD = validarDataEvento(dataEvento);
-    if (erroD) { Alert.alert('Data invalida', erroD); return; }
-    const orc = orcamento.replace(/\./g, '').replace(',', '.');
-    if (!orcamento || parseFloat(orc) <= 0) { Alert.alert('Erro', 'Informe um orcamento valido.'); return; }
-    presenter.handleCadastrarEvento(nome, converterParaBanco(dataEvento), orc);
+    if (!dataEvento || dataEvento.length < 10) { Alert.alert('Erro', 'Informe a data completa no formato DD/MM/AAAA.'); return; }
+    const erroDataFinal = validarDataEvento(dataEvento);
+    if (erroDataFinal) { Alert.alert('Data invalida', erroDataFinal); return; }
+    const orcamentoLimpo = orcamento.replace(/\./g, '').replace(',', '.');
+    if (!orcamento || parseFloat(orcamentoLimpo) <= 0) { Alert.alert('Erro', 'Informe um orcamento valido.'); return; }
+    presenter.handleCadastrarEvento(nome, converterParaBanco(dataEvento), orcamentoLimpo);
   };
 
   const handleSalvarEdicao = () => {
     if (!nomeEditar) { Alert.alert('Erro', 'O nome do evento e obrigatorio.'); return; }
-    if (!dataEditar || dataEditar.length < 10) { Alert.alert('Erro', 'Informe a data no formato DD/MM/AAAA.'); return; }
-    const erroD = validarDataEvento(dataEditar);
-    if (erroD) { Alert.alert('Data invalida', erroD); return; }
-    const orc = orcamentoEditar.replace(/\./g, '').replace(',', '.');
-    if (!orcamentoEditar || parseFloat(orc) <= 0) { Alert.alert('Erro', 'Informe um orcamento valido.'); return; }
-    presenter.handleEditarEvento(eventoEditando!.id_evento, nomeEditar, converterParaBanco(dataEditar), orc);
+    if (!dataEditar || dataEditar.length < 10) { Alert.alert('Erro', 'Informe a data completa no formato DD/MM/AAAA.'); return; }
+    const erroDataFinal = validarDataEvento(dataEditar);
+    if (erroDataFinal) { Alert.alert('Data invalida', erroDataFinal); return; }
+    const orcamentoLimpo = orcamentoEditar.replace(/\./g, '').replace(',', '.');
+    if (!orcamentoEditar || parseFloat(orcamentoLimpo) <= 0) { Alert.alert('Erro', 'Informe um orcamento valido.'); return; }
+    presenter.handleEditarEvento(eventoEditando!.id_evento, nomeEditar, converterParaBanco(dataEditar), orcamentoLimpo);
   };
 
-  const abrirEditar = (e: Evento) => {
-    setEventoEditando(e); setNomeEditar(e.nome);
-    setDataEditar(converterParaExibicao(e.data_evento));
-    setOrcamentoEditar(formatarOrcamento(e.orcamento)); setErroDataEditar('');
+  const abrirEditar = (evento: Evento) => {
+    setEventoEditando(evento);
+    setNomeEditar(evento.nome);
+    setDataEditar(converterParaExibicao(evento.data_evento));
+    setOrcamentoEditar(formatarOrcamento(evento.orcamento));
+    setErroDataEditar('');
     setModalEditarVisivel(true);
   };
 
-  const confirmarEncerrar = (e: Evento) => {
-    if (e.status === 'encerrado') { Alert.alert('Aviso', 'Este evento ja esta encerrado.'); return; }
-    if (Platform.OS === 'web') {
-      if ((window as any).confirm(`Encerrar "${e.nome}"? Esta acao nao pode ser desfeita.`))
-        presenter.handleEncerrarEvento(e.id_evento);
-    } else {
-      Alert.alert('Encerrar evento', `Encerrar "${e.nome}"?`, [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Encerrar', style: 'destructive', onPress: () => presenter.handleEncerrarEvento(e.id_evento) },
-      ]);
-    }
-  };
+  const confirmarEncerrar = (evento: Evento) => {
+  if (evento.status === 'encerrado') {
+    Alert.alert('Aviso', 'Este evento já esta encerrado.');
+    return;
+  }
 
-  const confirmarLogout = () => {
-    if (Platform.OS === 'web') {
-      if ((window as any).confirm('Deseja sair da conta?')) onLogout();
-    } else {
-      Alert.alert('Sair', 'Deseja sair da conta?', [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Sair', style: 'destructive', onPress: onLogout },
-      ]);
+  if (Platform.OS === 'web') {
+    const confirmado = (window as any).confirm(
+      `Deseja encerrar o evento "${evento.nome}"? Esta ação não pode ser desfeita.`
+    );
+    if (confirmado) {
+      presenter.handleEncerrarEvento(evento.id_evento);
     }
-  };
-
+  } else {
+    Alert.alert(
+      'Encerrar evento',
+      `Deseja encerrar o evento "${evento.nome}"? Esta ação não pode ser desfeita.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Encerrar', style: 'destructive', onPress: () => presenter.handleEncerrarEvento(evento.id_evento) },
+      ]
+    );
+  }
+};
   const renderEvento = ({ item }: { item: Evento }) => (
-    <View style={styles.card}>
-      <TouchableOpacity style={styles.cardToque} onPress={() => onSelecionarEvento(item)}>
-        <Text style={styles.cardTitulo}>{item.nome}</Text>
-        <Text style={styles.cardInfo}>Data: {converterParaExibicao(item.data_evento)}</Text>
-        <Text style={styles.cardInfo}>Orcamento: R$ {formatarOrcamento(item.orcamento)}</Text>
-        <View style={[styles.badge, item.status === 'ativo' ? styles.badgeAtivo : styles.badgeEncerrado]}>
-          <Text style={[styles.badgeText, item.status === 'encerrado' && styles.badgeTextEncerrado]}>
-            {item.status === 'ativo' ? 'Ativo' : 'Encerrado'}
-          </Text>
-        </View>
-      </TouchableOpacity>
-      <View style={styles.cardAcoes}>
-        <TouchableOpacity
-          style={[styles.btnAcao, item.status === 'encerrado' ? styles.btnAcaoDesativo : styles.btnEditar]}
-          onPress={() => item.status === 'ativo' && abrirEditar(item)}
-          disabled={item.status === 'encerrado'}
-        >
-          <Text style={[styles.btnAcaoTexto, item.status === 'encerrado' && styles.btnTextoDesativo]}>Editar</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.btnAcao, item.status === 'encerrado' ? styles.btnAcaoDesativo : styles.btnEncerrar]}
-          onPress={() => item.status === 'ativo' && confirmarEncerrar(item)}
-          disabled={item.status === 'encerrado'}
-        >
-          <Text style={[styles.btnAcaoTexto, item.status === 'encerrado' && styles.btnTextoDesativo]}>
-            {item.status === 'encerrado' ? 'Encerrado' : 'Encerrar'}
-          </Text>
-        </TouchableOpacity>
+  <View style={styles.card}>
+    <TouchableOpacity style={styles.cardToque} onPress={() => onSelecionarEvento(item)}>
+      <Text style={styles.cardTitulo}>{item.nome}</Text>
+      <Text style={styles.cardInfo}>Data: {converterParaExibicao(item.data_evento)}</Text>
+      <Text style={styles.cardInfo}>
+        Orcamento: R$ {formatarOrcamento(item.orcamento)}
+      </Text>
+      <View style={[styles.badge, item.status === 'ativo' ? styles.badgeAtivo : styles.badgeEncerrado]}>
+        <Text style={[styles.badgeText, item.status === 'encerrado' && styles.badgeTextEncerrado]}>
+          {item.status === 'ativo' ? 'Ativo' : 'Encerrado'}
+        </Text>
       </View>
+    </TouchableOpacity>
+
+    <View style={styles.cardAcoes}>
+      <TouchableOpacity
+        style={[styles.btnAcao, item.status === 'encerrado' ? styles.btnAcaoDesativo : styles.btnEditar]}
+        onPress={() => item.status === 'ativo' && abrirEditar(item)}
+        disabled={item.status === 'encerrado'}
+      >
+        <Text style={[styles.btnAcaoTexto, item.status === 'encerrado' && styles.btnTextoDesativo]}>
+          Editar
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.btnAcao, item.status === 'encerrado' ? styles.btnAcaoDesativo : styles.btnEncerrar]}
+        onPress={() => item.status === 'ativo' && confirmarEncerrar(item)}
+        disabled={item.status === 'encerrado'}
+      >
+        <Text style={[styles.btnAcaoTexto, item.status === 'encerrado' && styles.btnTextoDesativo]}>
+          {item.status === 'encerrado' ? 'Encerrado' : 'Encerrar'}
+        </Text>
+      </TouchableOpacity>
     </View>
-  );
+  </View>
+);
 
   return (
-    <SafeScreen backgroundColor="#f5f5f5">
-      <View style={styles.header}>
-        <Text style={styles.titulo}>Meus Eventos</Text>
-        <TouchableOpacity style={styles.btnNovo} onPress={() => setModalVisivel(true)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Text style={styles.btnNovoText}>+ Novo</Text>
-        </TouchableOpacity>
-      </View>
+  <SafeScreen backgroundColor="#f5f5f5">
+    <View style={styles.header}>
+      <Text style={styles.titulo}>Meus Eventos</Text>
+      <TouchableOpacity
+        style={styles.btnNovo}
+        onPress={() => setModalVisivel(true)}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
+        <Text style={styles.btnNovoText}>+ Novo</Text>
+      </TouchableOpacity>
+    </View>
 
       {loading && <ActivityIndicator color="#9b59b6" style={{ marginTop: 20 }} />}
+
       {!loading && eventos.length === 0 && (
         <View style={styles.vazio}>
           <Text style={styles.vazioText}>Nenhum evento cadastrado.</Text>
@@ -185,28 +238,22 @@ export function EventoView({ presenter, onSelecionarEvento, onLogout }: Props) {
         data={eventos}
         keyExtractor={(item) => item.id_evento.toString()}
         renderItem={renderEvento}
-        contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 96 }}
+        contentContainerStyle={{ padding: 16, gap: 12 }}
       />
 
-      <TouchableOpacity
-        style={[styles.btnSair, { bottom: insets.bottom + 20 }]}
-        onPress={confirmarLogout}
-        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-      >
-        <Text style={styles.btnSairText}>Sair</Text>
-      </TouchableOpacity>
-
       <Modal visible={modalVisivel} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <ScrollView contentContainerStyle={[styles.modalContent, { paddingTop: Math.max(insets.top, 59) }]}>
-            <Text style={styles.modalTitulo}>Novo Evento</Text>
+           <View style={styles.modalOverlay}>
+           <ScrollView contentContainerStyle={[styles.modalContent, { paddingTop: Math.max(insets.top, 59) }]}>
+           <Text style={styles.modalTitulo}>Novo Evento</Text>
             <TextInput style={styles.input} placeholder="Nome do evento *" value={nome} onChangeText={setNome} maxLength={80} />
             <Text style={styles.labelData}>Data minima: {hojeExibicao}</Text>
             <TextInput
               style={[styles.input, erroData ? styles.inputErro : null]}
-              placeholder="Data do evento (DD/MM/AAAA) *" value={dataEvento}
+              placeholder="Data do evento (DD/MM/AAAA) *"
+              value={dataEvento}
               onChangeText={(t) => handleChangeData(t, setDataEvento, setErroData)}
-              keyboardType="numeric" maxLength={10}
+              keyboardType="numeric"
+              maxLength={10}
             />
             {erroData ? <Text style={styles.textoErro}>{erroData}</Text> : null}
             <TextInput style={styles.input} placeholder="Orcamento (ex: 5.000,00)" value={orcamento} onChangeText={(t) => setOrcamento(aplicarMascaraOrcamento(t))} keyboardType="numeric" maxLength={12} />
@@ -221,16 +268,18 @@ export function EventoView({ presenter, onSelecionarEvento, onLogout }: Props) {
       </Modal>
 
       <Modal visible={modalEditarVisivel} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <ScrollView contentContainerStyle={[styles.modalContent, { paddingTop: Math.max(insets.top, 59) }]}>
+            <View style={styles.modalOverlay}>
+            <ScrollView contentContainerStyle={[styles.modalContent, { paddingTop: Math.max(insets.top, 59) }]}>
             <Text style={styles.modalTitulo}>Editar Evento</Text>
             <TextInput style={styles.input} placeholder="Nome do evento *" value={nomeEditar} onChangeText={setNomeEditar} maxLength={80} />
             <Text style={styles.labelData}>Data minima: {hojeExibicao}</Text>
             <TextInput
               style={[styles.input, erroDataEditar ? styles.inputErro : null]}
-              placeholder="Data do evento (DD/MM/AAAA) *" value={dataEditar}
+              placeholder="Data do evento (DD/MM/AAAA) *"
+              value={dataEditar}
               onChangeText={(t) => handleChangeData(t, setDataEditar, setErroDataEditar)}
-              keyboardType="numeric" maxLength={10}
+              keyboardType="numeric"
+              maxLength={10}
             />
             {erroDataEditar ? <Text style={styles.textoErro}>{erroDataEditar}</Text> : null}
             <TextInput style={styles.input} placeholder="Orcamento (ex: 5.000,00)" value={orcamentoEditar} onChangeText={(t) => setOrcamentoEditar(aplicarMascaraOrcamento(t))} keyboardType="numeric" maxLength={12} />
@@ -243,11 +292,12 @@ export function EventoView({ presenter, onSelecionarEvento, onLogout }: Props) {
           </ScrollView>
         </View>
       </Modal>
-    </SafeScreen>
-  );
+  </SafeScreen>
+);
 }
 
 const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#f5f5f5' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, backgroundColor: '#9b59b6' },
   titulo: { fontSize: 20, fontWeight: 'bold', color: '#fff' },
   btnNovo: { backgroundColor: '#fff', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20 },
@@ -260,14 +310,12 @@ const styles = StyleSheet.create({
   badgeAtivo: { backgroundColor: '#e8f5e9' },
   badgeEncerrado: { backgroundColor: '#fce4ec', borderWidth: 1, borderColor: '#e74c3c' },
   badgeText: { fontSize: 12, fontWeight: '600', color: '#333' },
-  badgeTextEncerrado: { color: '#c0392b', fontWeight: '700' },
   cardAcoes: { flexDirection: 'row', borderTopWidth: 0.5, borderTopColor: '#eee' },
   btnAcao: { flex: 1, paddingVertical: 10, alignItems: 'center' },
   btnEditar: { backgroundColor: '#f0e6ff', borderRightWidth: 0.5, borderRightColor: '#eee' },
   btnEncerrar: { backgroundColor: '#fce4ec' },
-  btnAcaoDesativo: { backgroundColor: '#f0f0f0', borderRightWidth: 0.5, borderRightColor: '#eee' },
+  btnEncerradoDesativo: { backgroundColor: '#f5f5f5' },
   btnAcaoTexto: { fontSize: 13, fontWeight: '500', color: '#555' },
-  btnTextoDesativo: { color: '#bbb' },
   vazio: { flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 80 },
   vazioText: { fontSize: 16, color: '#888' },
   vazioSub: { fontSize: 13, color: '#bbb', marginTop: 4 },
@@ -282,6 +330,7 @@ const styles = StyleSheet.create({
   btnSalvarText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   btnCancelar: { padding: 14, alignItems: 'center' },
   btnCancelarText: { color: '#888', fontSize: 16 },
-  btnSair: { position: 'absolute', right: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: '#e74c3c', borderRadius: 24, paddingHorizontal: 22, paddingVertical: 10, elevation: 4, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 4, shadowOffset: { width: 0, height: 2 } },
-  btnSairText: { color: '#e74c3c', fontWeight: 'bold', fontSize: 14 },
+  badgeTextEncerrado: { color: '#c0392b', fontWeight: '700' },
+  btnAcaoDesativo: { backgroundColor: '#f0f0f0', borderRightWidth: 0.5, borderRightColor: '#eee' },
+  btnTextoDesativo: { color: '#bbb' },
 });

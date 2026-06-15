@@ -1,5 +1,5 @@
+﻿import { Usuario, PerfilUsuario } from '../../../domain/models';
 import { UsuarioController } from '../../../application/api/controllers/UsuarioController';
-import { Usuario, PerfilUsuario } from '../../../domain/models';
 
 export interface CadastroView {
   showLoading(): void;
@@ -74,6 +74,8 @@ export class CadastroPresenter {
       this.view.onCadastroSuccess(resposta.dados);
     } catch (error: any) {
       this.view.showError(error.message ?? 'Erro ao cadastrar.');
-    } finally { this.view.hideLoading(); }
+    } finally {
+      this.view.hideLoading();
+    }
   }
 }

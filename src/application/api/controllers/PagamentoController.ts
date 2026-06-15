@@ -1,32 +1,50 @@
-import { PagamentoServiceImpl } from '../../../domain/services/PagamentoService';
-import { Pagamento } from '../../../domain/models';
-import { ResultadoOperacao } from './ResultadoOperacao';
+﻿import { PagamentoServiceImpl } from '../../../domain/services/PagamentoService';
 
 export class PagamentoController {
   constructor(private readonly pagamentoService: PagamentoServiceImpl) {}
 
-  async registrar(id_fornecedor: number, valor: number, vencimento: string): Promise<ResultadoOperacao<Pagamento>> {
-    try { return { sucesso: true, dados: await this.pagamentoService.registrar(id_fornecedor, valor, vencimento) }; }
-    catch (e: any) { return { sucesso: false, erro: e.message }; }
+  async registrar(id_fornecedor: number, valor: number, vencimento: string) {
+    try {
+      const pagamento = await this.pagamentoService.registrar(id_fornecedor, valor, vencimento);
+      return { sucesso: true, dados: pagamento };
+    } catch (error: any) {
+      return { sucesso: false, erro: error.message };
+    }
   }
 
-  async listar(id_fornecedor: number): Promise<ResultadoOperacao<Pagamento[]>> {
-    try { return { sucesso: true, dados: await this.pagamentoService.listarPorFornecedor(id_fornecedor) }; }
-    catch (e: any) { return { sucesso: false, erro: e.message }; }
+  async listar(id_fornecedor: number) {
+    try {
+      const pagamentos = await this.pagamentoService.listarPorFornecedor(id_fornecedor);
+      return { sucesso: true, dados: pagamentos };
+    } catch (error: any) {
+      return { sucesso: false, erro: error.message };
+    }
   }
 
-  async listarPorEvento(id_evento: number): Promise<ResultadoOperacao<Pagamento[]>> {
-    try { return { sucesso: true, dados: await this.pagamentoService.listarPorEvento(id_evento) }; }
-    catch (e: any) { return { sucesso: false, erro: e.message }; }
+  async listarPorEvento(id_evento: number) {
+    try {
+      const pagamentos = await this.pagamentoService.listarPorEvento(id_evento);
+      return { sucesso: true, dados: pagamentos };
+    } catch (error: any) {
+      return { sucesso: false, erro: error.message };
+    }
   }
 
-  async pagar(id_pagamento: number): Promise<ResultadoOperacao<Pagamento>> {
-    try { return { sucesso: true, dados: await this.pagamentoService.pagar(id_pagamento) }; }
-    catch (e: any) { return { sucesso: false, erro: e.message }; }
+  async pagar(id_pagamento: number) {
+    try {
+      const pagamento = await this.pagamentoService.pagar(id_pagamento);
+      return { sucesso: true, dados: pagamento };
+    } catch (error: any) {
+      return { sucesso: false, erro: error.message };
+    }
   }
 
-  async remover(id_pagamento: number): Promise<ResultadoOperacao> {
-    try { await this.pagamentoService.remover(id_pagamento); return { sucesso: true }; }
-    catch (e: any) { return { sucesso: false, erro: e.message }; }
+  async remover(id_pagamento: number) {
+    try {
+      await this.pagamentoService.remover(id_pagamento);
+      return { sucesso: true };
+    } catch (error: any) {
+      return { sucesso: false, erro: error.message };
+    }
   }
 }

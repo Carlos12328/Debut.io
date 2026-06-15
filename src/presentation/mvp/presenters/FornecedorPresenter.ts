@@ -1,4 +1,4 @@
-import { FornecedorController } from '../../../application/api/controllers/FornecedorController';
+import { FornecedorService } from '../../../domain/services';
 import { Fornecedor } from '../../../domain/models';
 
 export interface FornecedorView {
@@ -12,7 +12,12 @@ export interface FornecedorView {
 
 export class FornecedorPresenter {
   private view: FornecedorView | null = null;
-  constructor(private readonly fornecedorController: FornecedorController, private readonly id_evento: number) {}
+
+  constructor(
+    private readonly fornecedorService: FornecedorService,
+    private readonly id_evento: number
+  ) {}
+
   attachView(view: FornecedorView) { this.view = view; }
   detachView() { this.view = null; }
 
@@ -20,44 +25,61 @@ export class FornecedorPresenter {
     if (!this.view) return;
     this.view.showLoading();
     try {
-      const r = await this.fornecedorController.listar(this.id_evento);
-      if (!r.sucesso) throw new Error(r.erro);
-      this.view.onFornecedoresCarregados(r.dados ?? []);
-    } catch (e: any) { this.view.showError(e.message ?? 'Erro ao carregar fornecedores.'); }
-    finally { this.view.hideLoading(); }
+      const lista = await this.fornecedorService.listar(this.id_evento);
+      this.view.onFornecedoresCarregados(lista);
+    } catch (error: any) {
+      this.view.showError(error.message ?? 'Erro ao carregar fornecedores.');
+    } finally {
+      this.view.hideLoading();
+    }
   }
 
   async handleCadastrar(
-    nome: string, tipo_servico: string, valor: string,
-    cnpj?: string, telefone?: string, email?: string,
-    endereco_logradouro?: string, endereco_numero?: string, endereco_bairro?: string,
-    endereco_cidade?: string, endereco_estado?: string, endereco_cep?: string,
+    nome: string,
+    tipo_servico: string,
+    valor: string,
+    cnpj?: string,
+    telefone?: string,
+    email?: string,
+    endereco_logradouro?: string,
+    endereco_numero?: string,
+    endereco_bairro?: string,
+    endereco_cidade?: string,
+    endereco_estado?: string,
+    endereco_cep?: string,
   ) {
     if (!this.view) return;
     const valorNum = parseFloat(valor.replace(',', '.'));
-    if (isNaN(valorNum)) { this.view.showError('Valor invalido.'); return; }
+    if (isNaN(valorNum)) {
+      this.view.showError('Valor inválido.');
+      return;
+    }
     this.view.showLoading();
     try {
-      const r = await this.fornecedorController.cadastrar(
+      const fornecedor = await this.fornecedorService.cadastrar(
         this.id_evento, nome, tipo_servico, valorNum,
         cnpj, telefone, email,
         endereco_logradouro, endereco_numero, endereco_bairro,
         endereco_cidade, endereco_estado, endereco_cep,
       );
-      if (!r.sucesso || !r.dados) throw new Error(r.erro);
-      this.view.onFornecedorCadastrado(r.dados);
-    } catch (e: any) { this.view.showError(e.message ?? 'Erro ao cadastrar fornecedor.'); }
-    finally { this.view.hideLoading(); }
+      this.view.onFornecedorCadastrado(fornecedor);
+    } catch (error: any) {
+      this.view.showError(error.message ?? 'Erro ao cadastrar fornecedor.');
+    } finally {
+      this.view.hideLoading();
+    }
   }
 
   async handleRemover(id_fornecedor: number) {
     if (!this.view) return;
     this.view.showLoading();
     try {
-      const r = await this.fornecedorController.remover(id_fornecedor);
-      if (!r.sucesso) throw new Error(r.erro);
+      await this.fornecedorService.remover(id_fornecedor);
       this.view.onFornecedorRemovido(id_fornecedor);
-    } catch (e: any) { this.view.showError(e.message ?? 'Erro ao remover fornecedor.'); }
-    finally { this.view.hideLoading(); }
+    } catch (error: any) {
+      this.view.showError(error.message ?? 'Erro ao remover fornecedor.');
+    } finally {
+      this.view.hideLoading();
+    }
   }
 }

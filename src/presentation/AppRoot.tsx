@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { LoginScreen } from './modules/login/LoginScreen';
 import { CadastroScreen } from './modules/cadastro/CadastroScreen';
@@ -7,9 +7,6 @@ import { EventoScreen } from './modules/eventos/EventoScreen';
 import { MainScreen } from './modules/main/MainScreen';
 import { Usuario, Evento } from '../domain/models';
 import { getDatabase } from '../persistence/db';
-import { AuthServiceImpl, CadastroServiceImpl } from '../domain/services';
-import { UsuarioController } from '../application/api/controllers';
-import { UsuarioSupabaseRepository } from '../persistence/repositories/UsuarioSupabaseRepository';
 
 type Tela = 'login' | 'cadastro' | 'recuperar-senha' | 'eventos' | 'main';
 
@@ -19,34 +16,38 @@ export default function AppRoot() {
   const [eventoSelecionado, setEventoSelecionado] = useState<Evento | null>(null);
   const [dbPronto, setDbPronto] = useState(false);
 
-  const usuarioController = useMemo(() => {
-    const repo = new UsuarioSupabaseRepository();
-    return new UsuarioController(new AuthServiceImpl(repo), new CadastroServiceImpl(repo));
-  }, []);
-
   useEffect(() => {
     getDatabase()
       .then(() => setDbPronto(true))
-      .catch(err => { console.error('[DB ERROR]', err); setDbPronto(true); });
+      .catch(err => {
+        console.error('[DB ERROR]', err);
+        setDbPronto(true);
+      });
   }, []);
 
-  const handleLogout = async () => {
-    await usuarioController.logout();
-    setUsuarioLogado(null);
-    setEventoSelecionado(null);
-    setTelaAtual('login');
-  };
-
   if (!dbPronto) {
-    return <View style={styles.container}><Text>Carregando...</Text></View>;
+    return (
+      <View style={styles.container}>
+        <Text>Carregando...</Text>
+      </View>
+    );
   }
 
   if (!usuarioLogado) {
     if (telaAtual === 'cadastro') {
-      return <CadastroScreen onCadastroSuccess={() => setTelaAtual('login')} onVoltarLogin={() => setTelaAtual('login')} />;
+      return (
+        <CadastroScreen
+          onCadastroSuccess={() => setTelaAtual('login')}
+          onVoltarLogin={() => setTelaAtual('login')}
+        />
+      );
     }
     if (telaAtual === 'recuperar-senha') {
-      return <RecuperacaoSenhaScreen onVoltarLogin={() => setTelaAtual('login')} />;
+      return (
+        <RecuperacaoSenhaScreen
+          onVoltarLogin={() => setTelaAtual('login')}
+        />
+      );
     }
     return (
       <LoginScreen
@@ -70,10 +71,14 @@ export default function AppRoot() {
   return (
     <EventoScreen
       usuario={usuarioLogado}
-      onSelecionarEvento={(evento) => { setEventoSelecionado(evento); setTelaAtual('main'); }}
-      onLogout={handleLogout}
+      onSelecionarEvento={(evento) => {
+        setEventoSelecionado(evento);
+        setTelaAtual('main');
+      }}
     />
   );
 }
 
-const styles = StyleSheet.create({ container: { flex: 1, justifyContent: 'center', alignItems: 'center' } });
+const styles = StyleSheet.create({
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+});

@@ -1,11 +1,12 @@
 import * as bcrypt from 'bcryptjs';
 import { Usuario } from '../models/usuario';
 import { UsuarioRepository } from '../../persistence/repositories';
-import { supabase } from '../../lib/supabase';
 
 export interface AuthService {
-  login(email: string, senha: string): Promise<Usuario>;
-  logout(): Promise<void>;
+  login(
+    email: string,
+    senha: string
+  ): Promise<Usuario>;
 }
 
 export class AuthServiceImpl
@@ -65,9 +66,5 @@ implements AuthService {
     }
 
     return usuario;
-  }
-
-  async logout(): Promise<void> {
-    try { await supabase.auth.signOut(); } catch { /* sessao legada sem Supabase Auth */ }
   }
 }
