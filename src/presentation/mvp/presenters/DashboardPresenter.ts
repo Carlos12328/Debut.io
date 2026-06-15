@@ -1,6 +1,8 @@
 import { DashboardController } from '../../../application/api/controllers/DashboardController';
-import { Evento, Tarefa } from '../../../domain/models';
-import { DashboardViewModel, DashboardTarefaResumo } from '../models/DashboardViewModel';
+import { Evento, Tarefa, PrioridadeTarefa } from '../../../domain/models';
+import { DashboardViewModel, DashboardTarefaResumo, DashboardCompromissoResumo } from '../models/DashboardViewModel';
+
+const ORDEM_PRIORIDADE: Record<PrioridadeTarefa, number> = { alta: 0, media: 1, baixa: 2 };
 
 export interface DashboardView {
   showLoading(): void;
@@ -28,7 +30,7 @@ export class DashboardPresenter {
     try {
       const r = await this.dashboardController.obterResumo(this.evento.id_evento);
       if (!r.sucesso || !r.dados) throw new Error(r.erro ?? 'Erro ao carregar dashboard.');
-      const { pagamentos, tarefas } = r.dados;
+      const { pagamentos, tarefas, compromissos } = r.dados;
 
       const totalGasto = pagamentos.reduce((s,p)=>s+Number(p.valor),0);
       const orcamentoTotal = Number(this.evento.orcamento);
@@ -38,9 +40,20 @@ export class DashboardPresenter {
 
       const proximasTarefas: DashboardTarefaResumo[] = naoConcluidas
         .filter((t): t is Tarefa & { prazo: string } => !!t.prazo)
-        .sort((a,b)=>a.prazo.localeCompare(b.prazo))
+        .sort((a,b)=>{
+          const pa = ORDEM_PRIORIDADE[a.prioridade ?? 'media'];
+          const pb = ORDEM_PRIORIDADE[b.prioridade ?? 'media'];
+          if (pa !== pb) return pa - pb;
+          return a.prazo.localeCompare(b.prazo);
+        })
         .slice(0,3)
-        .map(t=>({ id: t.id_tarefa, nome: t.descricao, prazoFormatado: this.fmt(t.prazo) }));
+        .map(t=>({ id: t.id_tarefa, nome: t.descricao, prazoFormatado: this.fmt(t.prazo), prioridade: t.prioridade ?? 'media' }));
+
+      const proximosCompromissos: DashboardCompromissoResumo[] = compromissos
+        .slice()
+        .sort((a,b)=>`${a.data_compromisso} ${a.horario ?? ''}`.localeCompare(`${b.data_compromisso} ${b.horario ?? ''}`))
+        .slice(0,3)
+        .map(c=>({ id: c.id_compromisso, descricao: c.descricao, dataFormatada: this.fmt(c.data_compromisso), horario: c.horario ?? '' }));
 
       this.view.onDashboardCarregado({
         nomeEvento: this.evento.nome,
@@ -49,6 +62,7 @@ export class DashboardPresenter {
         orcamentoTotal, totalGasto, disponivel, percentualComprometido,
         pendenciasLabel: `${naoConcluidas.length} de ${tarefas.length}`,
         proximasTarefas,
+        proximosCompromissos,
       });
     } catch (e: any) { this.view.showError(e.message ?? 'Erro ao carregar dashboard.'); }
     finally { this.view.hideLoading(); }

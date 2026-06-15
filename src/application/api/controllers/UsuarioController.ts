@@ -1,6 +1,7 @@
 ﻿import { AuthServiceImpl } from '../../../domain/services/AuthService';
 import { CadastroServiceImpl } from '../../../domain/services/CadastroService';
-import { PerfilUsuario } from '../../../domain/models';
+import { PerfilUsuario, Usuario } from '../../../domain/models';
+import { ResultadoOperacao } from './ResultadoOperacao';
 
 export class UsuarioController {
   constructor(
@@ -8,10 +9,19 @@ export class UsuarioController {
     private readonly cadastroService: CadastroServiceImpl,
   ) {}
 
-  async login(email: string, senha: string) {
+  async login(email: string, senha: string): Promise<ResultadoOperacao<Usuario>> {
     try {
       const usuario = await this.authService.login(email, senha);
       return { sucesso: true, dados: usuario };
+    } catch (error: any) {
+      return { sucesso: false, erro: error.message };
+    }
+  }
+
+  async logout(): Promise<ResultadoOperacao> {
+    try {
+      await this.authService.logout();
+      return { sucesso: true };
     } catch (error: any) {
       return { sucesso: false, erro: error.message };
     }
@@ -30,7 +40,7 @@ export class UsuarioController {
     endereco_cidade?: string,
     endereco_estado?: string,
     endereco_cep?: string,
-  ) {
+  ): Promise<ResultadoOperacao<Usuario>> {
     try {
       const usuario = await this.cadastroService.cadastrar(
         nome,

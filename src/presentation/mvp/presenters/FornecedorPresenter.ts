@@ -1,5 +1,5 @@
-import { FornecedorService } from '../../../domain/services';
 import { Fornecedor } from '../../../domain/models';
+import { FornecedorController } from '../../../application/api/controllers/FornecedorController';
 
 export interface FornecedorView {
   showLoading(): void;
@@ -14,7 +14,7 @@ export class FornecedorPresenter {
   private view: FornecedorView | null = null;
 
   constructor(
-    private readonly fornecedorService: FornecedorService,
+    private readonly fornecedorController: FornecedorController,
     private readonly id_evento: number
   ) {}
 
@@ -25,8 +25,12 @@ export class FornecedorPresenter {
     if (!this.view) return;
     this.view.showLoading();
     try {
-      const lista = await this.fornecedorService.listar(this.id_evento);
-      this.view.onFornecedoresCarregados(lista);
+      const resposta = await this.fornecedorController.listar(this.id_evento);
+      if (!resposta.sucesso || !resposta.dados) {
+        this.view.showError(resposta.erro ?? 'Erro ao carregar fornecedores.');
+        return;
+      }
+      this.view.onFornecedoresCarregados(resposta.dados);
     } catch (error: any) {
       this.view.showError(error.message ?? 'Erro ao carregar fornecedores.');
     } finally {
@@ -56,13 +60,17 @@ export class FornecedorPresenter {
     }
     this.view.showLoading();
     try {
-      const fornecedor = await this.fornecedorService.cadastrar(
+      const resposta = await this.fornecedorController.cadastrar(
         this.id_evento, nome, tipo_servico, valorNum,
         cnpj, telefone, email,
         endereco_logradouro, endereco_numero, endereco_bairro,
         endereco_cidade, endereco_estado, endereco_cep,
       );
-      this.view.onFornecedorCadastrado(fornecedor);
+      if (!resposta.sucesso || !resposta.dados) {
+        this.view.showError(resposta.erro ?? 'Erro ao cadastrar fornecedor.');
+        return;
+      }
+      this.view.onFornecedorCadastrado(resposta.dados);
     } catch (error: any) {
       this.view.showError(error.message ?? 'Erro ao cadastrar fornecedor.');
     } finally {
@@ -74,7 +82,11 @@ export class FornecedorPresenter {
     if (!this.view) return;
     this.view.showLoading();
     try {
-      await this.fornecedorService.remover(id_fornecedor);
+      const resposta = await this.fornecedorController.remover(id_fornecedor);
+      if (!resposta.sucesso) {
+        this.view.showError(resposta.erro ?? 'Erro ao remover fornecedor.');
+        return;
+      }
       this.view.onFornecedorRemovido(id_fornecedor);
     } catch (error: any) {
       this.view.showError(error.message ?? 'Erro ao remover fornecedor.');

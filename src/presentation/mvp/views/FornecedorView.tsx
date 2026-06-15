@@ -1,16 +1,17 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, FlatList, Modal, ScrollView, } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, FlatList, Modal, ScrollView, Platform, } from 'react-native';
 import { FornecedorPresenter, FornecedorView as IFornecedorView } from '../presenters/FornecedorPresenter';
 import { Fornecedor } from '../../../domain/models';
-import { SafeScreen } from '../../components/SafeScreen';   
+import { SafeScreen } from '../../components/SafeScreen';
 
 interface Props {
   presenter: FornecedorPresenter;
   nomeEvento: string;
   onVoltar: () => void;
+  onSelecionarFornecedor: (fornecedor: Fornecedor) => void;
 }
 
-export function FornecedorView({ presenter, nomeEvento, onVoltar }: Props) {
+export function FornecedorView({ presenter, nomeEvento, onVoltar, onSelecionarFornecedor }: Props) {
   const [fornecedores, setFornecedores] = useState<Fornecedor[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisivel, setModalVisivel] = useState(false);
@@ -73,22 +74,74 @@ export function FornecedorView({ presenter, nomeEvento, onVoltar }: Props) {
   };
 
   const aplicarMascaraValor = (v: string): string => {
-    const n = v.replace(/\D/g, '').slice(0, 10);
+    const n = v.replace(/\D/g, '').slice(0, 9);
     if (!n) return '';
-    const inteiro = parseInt(n, 10);
-    return (inteiro / 100).toFixed(2).replace('.', ',');
+    return (parseInt(n, 10) / 100)
+      .toFixed(2)
+      .replace('.', ',')
+      .replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  };
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const mostrarAlerta = (msg: string) => {
+    if (Platform.OS === 'web') (window as any).alert(msg);
+    else Alert.alert('Erro', msg);
+  };
+
+  const handleSalvar = () => {
+    if (!nome.trim()) { mostrarAlerta('Informe o nome do fornecedor.'); return; }
+    if (!tipoServico.trim()) { mostrarAlerta('Informe o tipo de servico.'); return; }
+
+    const valorLimpo = valor.replace(/\./g, '').replace(',', '.');
+    if (!valor || isNaN(parseFloat(valorLimpo)) || parseFloat(valorLimpo) <= 0) {
+      mostrarAlerta('Informe um valor valido.'); return;
+    }
+
+    if (email.trim() && !emailRegex.test(email.trim())) {
+      mostrarAlerta('E-mail invalido.'); return;
+    }
+
+    const cnpjDigitos = cnpj.replace(/\D/g, '');
+    if (cnpjDigitos && cnpjDigitos.length !== 14) {
+      mostrarAlerta('CNPJ incompleto. Informe os 14 digitos.'); return;
+    }
+
+    const cepDigitos = cep.replace(/\D/g, '');
+    if (cepDigitos && cepDigitos.length !== 8) {
+      mostrarAlerta('CEP incompleto. Informe os 8 digitos.'); return;
+    }
+
+    presenter.handleCadastrar(
+      nome.trim(),
+      tipoServico.trim(),
+      valorLimpo,
+      cnpjDigitos,
+      telefone.replace(/\D/g, ''),
+      email.trim(),
+      logradouro.trim(),
+      numero.trim(),
+      bairro.trim(),
+      cidade.trim(),
+      estado.trim().toUpperCase(),
+      cepDigitos,
+    );
   };
 
   const confirmarRemocao = (f: Fornecedor) => {
-    Alert.alert('Remover', `Remover "${f.nome}"?`, [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Remover', style: 'destructive', onPress: () => presenter.handleRemover(f.id_fornecedor) },
-    ]);
+    if (Platform.OS === 'web') {
+      if ((window as any).confirm(`Remover "${f.nome}"?`)) presenter.handleRemover(f.id_fornecedor);
+    } else {
+      Alert.alert('Remover', `Remover "${f.nome}"?`, [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Remover', style: 'destructive', onPress: () => presenter.handleRemover(f.id_fornecedor) },
+      ]);
+    }
   };
 
   const renderFornecedor = ({ item }: { item: Fornecedor }) => (
     <View style={styles.card}>
-      <View style={styles.cardInfo}>
+      <TouchableOpacity style={styles.cardInfo} onPress={() => onSelecionarFornecedor(item)} activeOpacity={0.7}>
         <Text style={styles.cardNome}>{item.nome}</Text>
         <Text style={styles.cardTipo}>{item.tipo_servico}</Text>
         {item.cnpj ? <Text style={styles.cardDetalhe}>CNPJ: {item.cnpj}</Text> : null}
@@ -100,7 +153,8 @@ export function FornecedorView({ presenter, nomeEvento, onVoltar }: Props) {
           </Text>
         ) : null}
         <Text style={styles.cardValor}>R$ {item.valor.toFixed(2)}</Text>
-      </View>
+        <Text style={styles.cardDica}>Toque para ver pagamentos</Text>
+      </TouchableOpacity>
       <TouchableOpacity onPress={() => confirmarRemocao(item)} style={styles.btnRemover}>
         <Text style={styles.btnRemoverText}>x</Text>
       </TouchableOpacity>
@@ -150,12 +204,14 @@ export function FornecedorView({ presenter, nomeEvento, onVoltar }: Props) {
               placeholder="Nome do fornecedor *"
               value={nome}
               onChangeText={setNome}
+              maxLength={80}
             />
             <TextInput
               style={styles.input}
               placeholder="Tipo de servico (ex: Buffet) *"
               value={tipoServico}
               onChangeText={setTipoServico}
+              maxLength={60}
             />
             <TextInput
               style={styles.input}
@@ -190,6 +246,7 @@ export function FornecedorView({ presenter, nomeEvento, onVoltar }: Props) {
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
+              maxLength={100}
             />
 
             <Text style={styles.secao}>Endereco</Text>
@@ -206,6 +263,7 @@ export function FornecedorView({ presenter, nomeEvento, onVoltar }: Props) {
               placeholder="Logradouro (rua, avenida...)"
               value={logradouro}
               onChangeText={setLogradouro}
+              maxLength={100}
             />
             <View style={styles.row}>
               <TextInput
@@ -214,12 +272,14 @@ export function FornecedorView({ presenter, nomeEvento, onVoltar }: Props) {
                 value={numero}
                 onChangeText={setNumero}
                 keyboardType="numeric"
+                maxLength={10}
               />
               <TextInput
                 style={[styles.input, styles.inputBairro]}
                 placeholder="Bairro"
                 value={bairro}
                 onChangeText={setBairro}
+                maxLength={60}
               />
             </View>
             <View style={styles.row}>
@@ -228,12 +288,13 @@ export function FornecedorView({ presenter, nomeEvento, onVoltar }: Props) {
                 placeholder="Cidade"
                 value={cidade}
                 onChangeText={setCidade}
+                maxLength={60}
               />
               <TextInput
                 style={[styles.input, styles.inputEstado]}
                 placeholder="UF"
                 value={estado}
-                onChangeText={setEstado}
+                onChangeText={(t) => setEstado(t.toUpperCase())}
                 maxLength={2}
                 autoCapitalize="characters"
               />
@@ -241,20 +302,7 @@ export function FornecedorView({ presenter, nomeEvento, onVoltar }: Props) {
 
             <TouchableOpacity
               style={styles.btnSalvar}
-              onPress={() => presenter.handleCadastrar(
-                nome,
-                tipoServico,
-                valor.replace(',', '.'),
-                cnpj.replace(/\D/g, ''),
-                telefone.replace(/\D/g, ''),
-                email,
-                logradouro,
-                numero,
-                bairro,
-                cidade,
-                estado,
-                cep.replace(/\D/g, '')
-              )}
+              onPress={handleSalvar}
               disabled={loading}
             >
               {loading
@@ -288,6 +336,7 @@ const styles = StyleSheet.create({
   cardTipo: { fontSize: 13, color: '#888', marginTop: 2 },
   cardDetalhe: { fontSize: 12, color: '#aaa', marginTop: 2 },
   cardValor: { fontSize: 15, color: '#9b59b6', fontWeight: '600', marginTop: 4 },
+  cardDica: { fontSize: 11, color: '#bda6d4', marginTop: 6, fontStyle: 'italic' },
   btnRemover: { padding: 8 },
   btnRemoverText: { color: '#e74c3c', fontSize: 18, fontWeight: 'bold' },
   vazio: { flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 80 },

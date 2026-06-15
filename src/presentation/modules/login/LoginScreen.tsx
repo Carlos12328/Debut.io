@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
 import { LoginView } from '../../mvp/views/LoginView';
 import { LoginPresenter } from '../../mvp/presenters/LoginPresenter';
-import { AuthServiceImpl } from '../../../domain/services';
+import { AuthServiceImpl, CadastroServiceImpl } from '../../../domain/services';
+import { UsuarioController } from '../../../application/api/controllers/UsuarioController';
 import { UsuarioSupabaseRepository } from '../../../persistence/repositories/UsuarioSupabaseRepository';
 import { Usuario } from '../../../domain/models';
 
@@ -14,8 +15,10 @@ interface Props {
 export function LoginScreen({ onLoginSuccess, onIrParaCadastro, onIrParaRecuperacao }: Props) {
   const presenter = useMemo(() => {
     const repo = new UsuarioSupabaseRepository();
-    const service = new AuthServiceImpl(repo);
-    return new LoginPresenter(service);
+    const authService = new AuthServiceImpl(repo);
+    const cadastroService = new CadastroServiceImpl(repo);
+    const usuarioController = new UsuarioController(authService, cadastroService);
+    return new LoginPresenter(usuarioController);
   }, []);
 
   return (

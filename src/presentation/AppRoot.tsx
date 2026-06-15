@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { LoginScreen } from './modules/login/LoginScreen';
 import { CadastroScreen } from './modules/cadastro/CadastroScreen';
@@ -7,6 +7,9 @@ import { EventoScreen } from './modules/eventos/EventoScreen';
 import { MainScreen } from './modules/main/MainScreen';
 import { Usuario, Evento } from '../domain/models';
 import { getDatabase } from '../persistence/db';
+import { AuthServiceImpl, CadastroServiceImpl } from '../domain/services';
+import { UsuarioController } from '../application/api/controllers/UsuarioController';
+import { UsuarioSupabaseRepository } from '../persistence/repositories/UsuarioSupabaseRepository';
 
 type Tela = 'login' | 'cadastro' | 'recuperar-senha' | 'eventos' | 'main';
 
@@ -15,6 +18,18 @@ export default function AppRoot() {
   const [usuarioLogado, setUsuarioLogado] = useState<Usuario | null>(null);
   const [eventoSelecionado, setEventoSelecionado] = useState<Evento | null>(null);
   const [dbPronto, setDbPronto] = useState(false);
+
+  const usuarioController = useMemo(() => {
+    const repo = new UsuarioSupabaseRepository();
+    return new UsuarioController(new AuthServiceImpl(repo), new CadastroServiceImpl(repo));
+  }, []);
+
+  const handleLogout = async () => {
+    await usuarioController.logout();
+    setEventoSelecionado(null);
+    setUsuarioLogado(null);
+    setTelaAtual('login');
+  };
 
   useEffect(() => {
     getDatabase()
@@ -75,6 +90,7 @@ export default function AppRoot() {
         setEventoSelecionado(evento);
         setTelaAtual('main');
       }}
+      onLogout={handleLogout}
     />
   );
 }

@@ -1,12 +1,14 @@
 import * as bcrypt from 'bcryptjs';
 import { Usuario } from '../models/usuario';
 import { UsuarioRepository } from '../../persistence/repositories';
+import { supabase } from '../../lib/supabase';
 
 export interface AuthService {
   login(
     email: string,
     senha: string
   ): Promise<Usuario>;
+  logout(): Promise<void>;
 }
 
 export class AuthServiceImpl
@@ -66,5 +68,15 @@ implements AuthService {
     }
 
     return usuario;
+  }
+
+  async logout(): Promise<void> {
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      // A sessao pode ser legada (sem Supabase Auth). O estado local
+      // e limpo pelo AppRoot mesmo que o signOut falhe.
+      console.warn('[logout] signOut falhou:', error);
+    }
   }
 }

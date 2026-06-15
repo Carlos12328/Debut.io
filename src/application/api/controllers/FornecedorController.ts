@@ -1,4 +1,6 @@
 ﻿import { FornecedorServiceImpl } from '../../../domain/services/FornecedorService';
+import { Fornecedor } from '../../../domain/models';
+import { ResultadoOperacao } from './ResultadoOperacao';
 
 export class FornecedorController {
   constructor(private readonly fornecedorService: FornecedorServiceImpl) {}
@@ -8,7 +10,7 @@ export class FornecedorController {
     cnpj?: string, telefone?: string, email?: string,
     endereco_logradouro?: string, endereco_numero?: string, endereco_bairro?: string,
     endereco_cidade?: string, endereco_estado?: string, endereco_cep?: string,
-  ) {
+  ): Promise<ResultadoOperacao<Fornecedor>> {
     try {
       const fornecedor = await this.fornecedorService.cadastrar(
         id_evento, nome, tipo_servico, valor,
@@ -22,7 +24,7 @@ export class FornecedorController {
     }
   }
 
-  async listar(id_evento: number) {
+  async listar(id_evento: number): Promise<ResultadoOperacao<Fornecedor[]>> {
     try {
       const fornecedores = await this.fornecedorService.listar(id_evento);
       return { sucesso: true, dados: fornecedores };
@@ -31,7 +33,7 @@ export class FornecedorController {
     }
   }
 
-  async remover(id_fornecedor: number) {
+  async remover(id_fornecedor: number): Promise<ResultadoOperacao> {
     try {
       await this.fornecedorService.remover(id_fornecedor);
       return { sucesso: true };

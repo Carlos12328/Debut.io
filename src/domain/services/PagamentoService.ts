@@ -25,7 +25,7 @@ export class PagamentoServiceImpl implements PagamentoService {
   }
 
   async listarPorFornecedor(id_fornecedor: number): Promise<Pagamento[]> {
-    return await this.pagamentoRepository.list();
+    return await this.pagamentoRepository.getByFornecedor(id_fornecedor);
   }
 
   async listarPorEvento(id_evento: number): Promise<Pagamento[]> {
